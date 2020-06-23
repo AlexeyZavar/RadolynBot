@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Discord.Net" Version="2.2.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.5" />
+      <PackageReference Include="NYoutubeDL" Version="0.11.0" />
+      <PackageReference Include="RadLibrary" Version="1.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Assets" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Assets\join.m4a">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <Content Include="Binaries\**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="Modules\PlayerModule.cs--" />
+    </ItemGroup>
+
+</Project>
