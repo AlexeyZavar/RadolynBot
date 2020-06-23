@@ -25,8 +25,4 @@
         </Content>
     </ItemGroup>
 
-    <ItemGroup>
-      <Compile Include="Modules\PlayerModule.cs--" />
-    </ItemGroup>
-
 </Project>

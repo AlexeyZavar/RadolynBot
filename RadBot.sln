@@ -2,8 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadBot", "RadBot\RadBot.csproj", "{BFFB99CF-4A31-46F3-8E64-EBE15F3C86FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{84EF046F-C9E2-406C-814B-F3B793BE4834}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -14,9 +12,5 @@ Global
 		{BFFB99CF-4A31-46F3-8E64-EBE15F3C86FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BFFB99CF-4A31-46F3-8E64-EBE15F3C86FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BFFB99CF-4A31-46F3-8E64-EBE15F3C86FE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{84EF046F-C9E2-406C-814B-F3B793BE4834}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{84EF046F-C9E2-406C-814B-F3B793BE4834}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{84EF046F-C9E2-406C-814B-F3B793BE4834}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{84EF046F-C9E2-406C-814B-F3B793BE4834}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
