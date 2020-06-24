@@ -40,6 +40,8 @@ namespace RadBot
             BotStartedTime = DateTime.Now;
             AppPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
 
+            // todo: fix PATH rewrite
+            
             // path to some libs
             Environment.SetEnvironmentVariable("PATH", Path.Combine("Binaries", "Libs"));
             
@@ -48,15 +50,16 @@ namespace RadBot
 
             // init config
             config.SetComment("token", "The bot token");
+            config.SetComment("prefix", "The bot prefix");
             config.SetComment("builderColor", "The embed builder's color (hex format)");
             config.SetComment("bulletSymbol", "The bullet symbol (•)");
             config.SetComment("youtube-dl", "The path to youtube-dl");
 
             config.Save();
 
-            if (config["token"] == "")
+            if (config["token"] == "" || config["prefix"] == "")
             {
-                LogManager.GetMethodLogger().Fatal("Bot token not specified in bot.conf!");
+                LogManager.GetMethodLogger().Fatal("Bot token\\prefix not specified in bot.conf!");
                 Environment.Exit(-1);
             }
 

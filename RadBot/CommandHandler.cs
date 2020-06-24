@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using RadLibrary.Configuration;
 using RadLibrary.Logging;
 
 #endregion
@@ -17,6 +18,7 @@ namespace RadBot
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly IServiceProvider _provider;
+        private readonly AppConfiguration _config;
 
         // Retrieve client and CommandService instance via ctor
         public CommandHandler(DiscordSocketClient client, CommandService commands, IServiceProvider provider)
@@ -24,6 +26,7 @@ namespace RadBot
             _commands = commands;
             _client = client;
             _provider = provider;
+            _config = _provider.GetService(typeof(AppConfiguration)) as AppConfiguration;
         }
 
         public async Task InstallCommandsAsync()
@@ -55,7 +58,7 @@ namespace RadBot
             var argPos = 0;
 
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-            if (!message.HasCharPrefix('>', ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos))
+            if (!message.HasStringPrefix(_config["prefix"], ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos))
                 return;
 
             // Create a WebSocket-based command context based on the message

