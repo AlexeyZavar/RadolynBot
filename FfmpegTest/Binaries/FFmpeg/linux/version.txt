@@ -1,3 +1,0 @@
-4.3
-
-https://johnvansickle.com/ffmpeg/
