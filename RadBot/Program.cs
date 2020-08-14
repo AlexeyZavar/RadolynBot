@@ -7,6 +7,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using RadLibrary.Configuration;
+using RadLibrary.Configuration.Managers;
 using RadLibrary.Logging;
 
 #endregion
@@ -28,7 +29,7 @@ namespace RadBot
 
         private async Task MainAsync()
         {
-            //LogManager.AddExceptionsHandler();
+            LogManager.AddExceptionsHandler();
 
             _config = AppConfiguration.Initialize<FileManager>("bot");
 
@@ -54,7 +55,7 @@ namespace RadBot
             await _handler.InstallCommandsAsync();
 
             await _client.LoginAsync(TokenType.Bot, _config["token"]);
-            await _client.SetActivityAsync(new Game("Radolyn"));
+            await _client.SetActivityAsync(new Game("Radolyn's Maid"));
             await _client.StartAsync();
 
             await Task.Delay(-1);
@@ -67,10 +68,10 @@ namespace RadBot
             switch (msg.Severity)
             {
                 case LogSeverity.Critical:
-                    logger.Fatal(msg.Exception, msg.Message);
+                    logger.Fatal(Helper.FormatException(msg.Exception));
                     break;
                 case LogSeverity.Error:
-                    logger.Error(msg.Exception, msg.Message);
+                    logger.Error(Helper.FormatException(msg.Exception));
                     break;
                 case LogSeverity.Warning:
                     logger.Warn(msg.Message);

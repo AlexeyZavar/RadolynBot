@@ -7,13 +7,8 @@
 
     <ItemGroup>
       <PackageReference Include="Discord.Net" Version="2.2.0" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.5" />
-      <PackageReference Include="NYoutubeDL" Version="0.11.0" />
-      <PackageReference Include="RadLibrary" Version="1.2.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="Assets" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.6" />
+      <PackageReference Include="RadLibrary" Version="1.3.2" />
     </ItemGroup>
 
     <ItemGroup>
@@ -23,6 +18,11 @@
         <Content Include="Binaries\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\CompilerModule\CompilerModule.csproj" />
+      <ProjectReference Include="..\RadBot.Modules\RadBot.Modules.csproj" />
     </ItemGroup>
 
 </Project>
