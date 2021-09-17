@@ -256,7 +256,7 @@ namespace RadBot.Modules
             [Command]
             public async Task Clean([Summary("The maximum messages to view for deletion.")] int max)
             {
-                await CleanAsync(Context.Channel, message => true, max);
+                await CleanAsync(Context.Channel, _ => true, max);
             }
 
             private async Task CleanAsync(ISocketMessageChannel channel, Predicate<IMessage> predicate, int max)

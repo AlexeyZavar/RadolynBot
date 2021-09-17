@@ -23,7 +23,7 @@ namespace RadBot
                 LogSeverity.Info => LogEventLevel.Information,
                 LogSeverity.Verbose => LogEventLevel.Verbose,
                 LogSeverity.Debug => LogEventLevel.Debug,
-                _ => throw new ArgumentOutOfRangeException()
+                _ => throw new ArgumentOutOfRangeException(nameof(message))
             };
 
             Log.Write(level, message.Exception, message.Message);

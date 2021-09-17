@@ -16,13 +16,13 @@ namespace RadBot.Modules
     [Name("Random")]
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
+        private readonly CommandService _commandService;
         private readonly AppConfiguration _config;
-        private readonly CommandService _service;
         private readonly IServiceProvider _services;
 
-        public HelpModule(CommandService service, AppConfiguration config, IServiceProvider services)
+        public HelpModule(CommandService commandService, AppConfiguration config, IServiceProvider services)
         {
-            _service = service;
+            _commandService = commandService;
             _config = config;
             _services = services;
         }
@@ -36,7 +36,7 @@ namespace RadBot.Modules
             var dict = new Dictionary<string, string>();
             var fields = new List<EmbedFieldBuilder>();
 
-            foreach (var module in _service.Modules)
+            foreach (var module in _commandService.Modules)
             {
                 var localName = module.IsSubmodule ? module.Parent.Name + "." + module.Name : module.Name;
 
@@ -96,7 +96,7 @@ namespace RadBot.Modules
         [Summary("Prints help message about specified command.")]
         public async Task Help([Remainder] [Summary("The command")] string command)
         {
-            var found = _service.Search(command);
+            var found = _commandService.Search(command);
 
             if (!found.IsSuccess)
             {
@@ -108,14 +108,15 @@ namespace RadBot.Modules
             {
                 var builder = Helper.GetBuilder();
 
-                var fields = new List<EmbedFieldBuilder>();
-
-                fields.Add(new EmbedFieldBuilder
+                var fields = new List<EmbedFieldBuilder>
                 {
-                    Name = "Description:",
-                    Value = cmd.Command.Summary,
-                    IsInline = true
-                });
+                    new()
+                    {
+                        Name = "Description:",
+                        Value = cmd.Command.Summary,
+                        IsInline = true
+                    }
+                };
 
                 var parameters = cmd.Command.Parameters.Aggregate("",
                     (current, parameter) => current + _config["bulletSymbol"] + " " + parameter.Name + ": " +

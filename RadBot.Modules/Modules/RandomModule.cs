@@ -24,7 +24,7 @@ namespace RadBot.Modules
             embedBuilder.AddField("Twitter:", "https://twitter.com/RadolynInc", true);
 
 
-            await ReplyAsync("", false, embedBuilder.Build());
+            await ReplyAsync(embed: embedBuilder.Build());
         }
     }
 }

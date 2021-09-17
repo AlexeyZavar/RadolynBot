@@ -25,9 +25,9 @@ namespace RadBot.Modules
     public class FunModule : ModuleBase<SocketCommandContext>
     {
         private static int _flightNumber;
-        private static readonly List<ulong> InFlight = new List<ulong>();
+        private static readonly List<ulong> InFlight = new();
 
-        private static HashSet<ulong> _inLock = new HashSet<ulong>();
+        private static HashSet<ulong> _inLock = new();
 
         public FunModule(DiscordSocketClient client)
         {
@@ -267,14 +267,16 @@ namespace RadBot.Modules
                     {
                         await Context.Guild.CurrentUser.VoiceChannel.DisconnectAsync();
                     }
-                    catch
+                    catch (Exception e)
                     {
+                        Log.Error(e, "Error while disconnecting from {Channel}", channel.Name);
                     }
 
                     await Task.Delay(800);
                 }
-                catch
+                catch (Exception e)
                 {
+                    Log.Error(e, "Error while connecting to {Channel}", channel.Name);
                 }
         }
 
@@ -296,14 +298,16 @@ namespace RadBot.Modules
                     {
                         await Context.Guild.CurrentUser.VoiceChannel.DisconnectAsync();
                     }
-                    catch
+                    catch (Exception e)
                     {
+                        Log.Error(e, "Error while disconnecting from {Channel}", channel.Name);
                     }
 
                     await Task.Delay(800);
                 }
-                catch
+                catch (Exception e)
                 {
+                    Log.Error(e, "Error while connecting");
                 }
         }
 
@@ -311,9 +315,16 @@ namespace RadBot.Modules
         [Group("raid")]
         private class RaidModule : ModuleBase<SocketCommandContext>
         {
-            protected override async void BeforeExecute(CommandInfo command)
+            protected override void BeforeExecute(CommandInfo command)
             {
-                await Context.Message.DeleteAsync();
+                try
+                {
+                    Context.Message.DeleteAsync().GetAwaiter().GetResult();
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Error while executing {Method} in {Class}", nameof(AfterExecute), nameof(RaidModule));
+                }
 
                 base.BeforeExecute(command);
             }
@@ -339,15 +350,15 @@ namespace RadBot.Modules
             [Summary("Creates many voice channels.")]
             public async Task VoiceFlood()
             {
-                for (var i = 0; i < int.MaxValue; ++i)
+                for (var i = 0; i < 500; ++i)
                     try
                     {
                         await Context.Guild.CreateVoiceChannelAsync(i.ToString());
                         Log.Information("CREATED {Count} VOICE CHANNEL", i);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        Log.Warning("FAILED TO CREATE {Count} VOICE CHANNEL", i);
+                        Log.Warning(e, "FAILED TO CREATE {Count} VOICE CHANNEL", i);
                     }
             }
 
@@ -364,9 +375,9 @@ namespace RadBot.Modules
                             await channel.DeleteAsync();
                             Log.Information("DELETED {ChannelName} VOICE CHANNEL", channel.Name);
                         }
-                        catch
+                        catch (Exception e)
                         {
-                            Log.Warning("FAILED TO DELETE {ChannelName} VOICE CHANNEL", channel.Name);
+                            Log.Warning(e, "FAILED TO DELETE {ChannelName} VOICE CHANNEL", channel.Name);
                         }
             }
 
@@ -384,9 +395,9 @@ namespace RadBot.Modules
                         await channel.DeleteAsync();
                         Log.Information("DELETED {ChannelName} VOICE CHANNEL", channel.Name);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        Log.Warning("FAILED TO DELETE {ChannelName} VOICE CHANNEL", channel.Name);
+                        Log.Warning(e, "FAILED TO DELETE {ChannelName} VOICE CHANNEL", channel.Name);
                     }
             }
 
@@ -404,9 +415,9 @@ namespace RadBot.Modules
                         await user.ModifyAsync(properties => properties.Nickname = nick);
                         Log.Information("Set nickname for {Username}", user.Username);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        Log.Warning("Failed to set nickname for {Username}", user.Username);
+                        Log.Warning(e, "Failed to set nickname for {Username}", user.Username);
                     }
 
                 var msg = await ReplyAsync("Done!");
@@ -426,9 +437,9 @@ namespace RadBot.Modules
                         await user.ModifyAsync(properties => properties.Nickname = nicks.RandomItem());
                         Log.Information("Set nickname for {Username}", user.Username);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        Log.Warning("Failed to set nickname for {Username}", user.Username);
+                        Log.Warning(e, "Failed to set nickname for {Username}", user.Username);
                     }
 
                 var msg = await ReplyAsync("Done!");
@@ -448,9 +459,9 @@ namespace RadBot.Modules
                         await user.ModifyAsync(properties => properties.Nickname = null);
                         Log.Information("Restored nickname for {Username}", user.Username);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        Log.Warning("Failed to restore nickname for {Username}", user.Username);
+                        Log.Warning(e, "Failed to restore nickname for {Username}", user.Username);
                     }
 
                 var msg = await ReplyAsync("Done!");

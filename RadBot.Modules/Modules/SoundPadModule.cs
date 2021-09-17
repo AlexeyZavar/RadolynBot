@@ -25,7 +25,7 @@ namespace RadBot.Modules
     public class SoundPadModule : ModuleBase<SocketCommandContext>
     {
         private static readonly Dictionary<ulong, CancellationTokenSource> Tokens =
-            new Dictionary<ulong, CancellationTokenSource>();
+            new();
 
         private readonly AppConfiguration _config;
 

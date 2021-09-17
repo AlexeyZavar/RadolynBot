@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Discord;
 using RadLibrary;
 using RadLibrary.Colors;
@@ -17,16 +16,16 @@ namespace RadBot
 {
     public static class Helper
     {
-        public const string Version = "0.5";
-        public static DateTime BotStartedTime;
+        private const string Version = "0.5";
+        private static DateTime _botStartTime;
 
         private static AppConfiguration _config;
 
-        private static readonly Random Random = new Random();
+        private static readonly Random Random = new();
 
-        private static readonly HashSet<ulong> IgnoredUsers = new HashSet<ulong> { 305414308320247818 };
+        private static readonly HashSet<ulong> IgnoredUsers = new() { 305414308320247818 };
 
-        public static double UpTime => (DateTime.Now - BotStartedTime).TotalMilliseconds;
+        public static double UpTime => (DateTime.Now - _botStartTime).TotalMilliseconds;
 
         public static void CheckIgnoreThrow(IUser user)
         {
@@ -44,16 +43,9 @@ namespace RadBot
             return !IgnoredUsers.Contains(user.Id);
         }
 
-        public static string RandomString(int length)
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[Random.Next(s.Length)]).ToArray());
-        }
-
         public static void Initialize(AppConfiguration config)
         {
-            BotStartedTime = DateTime.Now;
+            _botStartTime = DateTime.Now;
 
             var oldPath = Environment.GetEnvironmentVariable("PATH");
 
@@ -77,22 +69,6 @@ namespace RadBot
 
             config.HotReload = true;
             _config = config;
-        }
-
-        public static string FormatException(Exception e)
-        {
-            return Environment.NewLine + e?.Source + ": " + e?.GetType() + Environment.NewLine + "Message: " +
-                   e?.Message +
-                   Environment.NewLine + "Stack trace:" + Environment.NewLine +
-                   Sub(e?.StackTrace, 1800);
-        }
-
-        private static string Sub(string s, int length)
-        {
-            if (s == null)
-                return "<nah>";
-
-            return s.Length <= length ? s : s[..length];
         }
 
         private static Color GetEmbedColor()
