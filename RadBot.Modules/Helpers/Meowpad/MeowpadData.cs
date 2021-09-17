@@ -158,13 +158,15 @@ namespace RadBot.Modules.Helpers.Meowpad
                 ContentTypeConverter.Singleton,
                 ExtensionConverter.Singleton,
                 ScreamDetectionConverter.Singleton,
-                new IsoDateTimeConverter {DateTimeStyles = DateTimeStyles.AssumeUniversal}
+                new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal }
             },
         };
     }
 
     internal class ContentTypeConverter : JsonConverter
     {
+        public static readonly ContentTypeConverter Singleton = new ContentTypeConverter();
+
         public override bool CanConvert(Type t)
         {
             return t == typeof(ContentType) || t == typeof(ContentType?);
@@ -195,7 +197,7 @@ namespace RadBot.Modules.Helpers.Meowpad
                 return;
             }
 
-            var value = (ContentType) untypedValue;
+            var value = (ContentType)untypedValue;
             switch (value)
             {
                 case ContentType.AudioMp3:
@@ -208,12 +210,12 @@ namespace RadBot.Modules.Helpers.Meowpad
 
             throw new Exception("Cannot marshal type ContentType");
         }
-
-        public static readonly ContentTypeConverter Singleton = new ContentTypeConverter();
     }
 
     internal class ExtensionConverter : JsonConverter
     {
+        public static readonly ExtensionConverter Singleton = new ExtensionConverter();
+
         public override bool CanConvert(Type t)
         {
             return t == typeof(Extension) || t == typeof(Extension?);
@@ -242,7 +244,7 @@ namespace RadBot.Modules.Helpers.Meowpad
                 return;
             }
 
-            var value = (Extension) untypedValue;
+            var value = (Extension)untypedValue;
             if (value == Extension.Mp3)
             {
                 serializer.Serialize(writer, ".mp3");
@@ -251,12 +253,12 @@ namespace RadBot.Modules.Helpers.Meowpad
 
             throw new Exception("Cannot marshal type Extension");
         }
-
-        public static readonly ExtensionConverter Singleton = new ExtensionConverter();
     }
 
     internal class ScreamDetectionConverter : JsonConverter
     {
+        public static readonly ScreamDetectionConverter Singleton = new ScreamDetectionConverter();
+
         public override bool CanConvert(Type t)
         {
             return t == typeof(ScreamDetection) || t == typeof(ScreamDetection?);
@@ -289,7 +291,7 @@ namespace RadBot.Modules.Helpers.Meowpad
                 return;
             }
 
-            var value = (ScreamDetection) untypedValue;
+            var value = (ScreamDetection)untypedValue;
             switch (value)
             {
                 case ScreamDetection.Loud:
@@ -305,8 +307,6 @@ namespace RadBot.Modules.Helpers.Meowpad
 
             throw new Exception("Cannot marshal type ScreamDetection");
         }
-
-        public static readonly ScreamDetectionConverter Singleton = new ScreamDetectionConverter();
     }
 
     public partial class SoundMeta
@@ -328,7 +328,7 @@ namespace RadBot.Modules.Helpers.Meowpad
                 DateParseHandling = DateParseHandling.None,
                 Converters =
                 {
-                    new IsoDateTimeConverter {DateTimeStyles = DateTimeStyles.AssumeUniversal},
+                    new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal },
                     ContentTypeConverter.Singleton,
                     ExtensionConverter.Singleton,
                     ScreamDetectionConverter.Singleton

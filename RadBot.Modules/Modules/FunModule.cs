@@ -54,8 +54,7 @@ namespace RadBot.Modules
         [Command("tp", RunMode = RunMode.Async)]
         [Alias("travel")]
         [Summary("Teleports user around all voice channels.")]
-        public async Task TpAsync([Remainder] [Summary("The user to tp")]
-            IUser user)
+        public async Task TpAsync([Remainder] [Summary("The user to tp")] IUser user)
         {
             Helper.CheckIgnoreThrow(user);
             var channels = Context.Guild.VoiceChannels;
@@ -386,7 +385,7 @@ namespace RadBot.Modules
                                 .Warn("FAILED TO DELETE {0} VOICE CHANNEL", channel.Name);
                         }
             }
-            
+
             [Command("unflood", RunMode = RunMode.Async)]
             [Summary("Removes voice channels by regex.")]
             public async Task VoiceUnFloodAsync([Remainder] string regex)
@@ -394,18 +393,18 @@ namespace RadBot.Modules
                 var channels = Context.Guild.VoiceChannels;
 
                 var regexExp = new Regex(regex);
-                
+
                 foreach (var channel in channels.Where(x => regexExp.IsMatch(x.Name)))
                     try
                     {
-                            await channel.DeleteAsync();
-                            LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
-                                .Info("DELETED {0} VOICE CHANNEL", channel.Name);
+                        await channel.DeleteAsync();
+                        LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
+                            .Info("DELETED {0} VOICE CHANNEL", channel.Name);
                     }
                     catch
                     {
-                            LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
-                                .Warn("FAILED TO DELETE {0} VOICE CHANNEL", channel.Name);
+                        LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
+                            .Warn("FAILED TO DELETE {0} VOICE CHANNEL", channel.Name);
                     }
             }
 

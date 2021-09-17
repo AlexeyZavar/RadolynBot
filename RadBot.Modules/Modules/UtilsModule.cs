@@ -110,7 +110,7 @@ namespace RadBot.Modules
                             break;
                         case ActionType.MessageDeleted:
                             var act7 = action.Data as MessageDeleteAuditLogData;
-                            if (act7.AuthorId != user.Id)
+                            if (act7.Target.Id != user.Id)
                                 continue;
                             break;
                         default:
@@ -202,7 +202,7 @@ namespace RadBot.Modules
                         case ActionType.MessageDeleted:
                             var act7 = action.Data as MessageDeleteAuditLogData;
                             sb.AppendLine(
-                                $"[{action.CreatedAt}] {action.User} Deleted {act7.MessageCount} messages in #{Context.Guild.GetChannel(act7.ChannelId)} from {Context.Guild.GetUser(act7.AuthorId)}");
+                                $"[{action.CreatedAt}] {action.User} Deleted {act7.MessageCount} messages in #{Context.Guild.GetChannel(act7.ChannelId)} from {Context.Guild.GetUser(act7.Target.Id)}");
                             break;
                         default:
                             --counter;
@@ -228,10 +228,9 @@ namespace RadBot.Modules
         {
             [Command("self", RunMode = RunMode.Async)]
             [Summary("Cleans bot's messages in current channel.")]
-            public async Task CleanSelfAsync([Summary("The maximum messages to view for deletion.")]
-                int max)
+            public async Task CleanSelfAsync([Summary("The maximum messages to view for deletion.")] int max)
             {
-                await CleanAsync((ITextChannel) Context.Channel,
+                await CleanAsync((ITextChannel)Context.Channel,
                     message => message.Author.Id == Context.Client.CurrentUser.Id ||
                                message.MentionedUserIds.Any(x => x == Context.Client.CurrentUser.Id) ||
                                message.Content.StartsWith('>'), max);
@@ -239,19 +238,18 @@ namespace RadBot.Modules
 
             [Command("user", RunMode = RunMode.Async)]
             [Summary("Cleans user's messages in current channel.")]
-            public async Task CleanSelfAsync([Summary("The maximum messages to view for deletion.")]
-                int max, [Summary("The user.")] IUser user)
+            public async Task CleanSelfAsync([Summary("The maximum messages to view for deletion.")] int max,
+                [Summary("The user.")] IUser user)
             {
-                await CleanAsync((ITextChannel) Context.Channel,
+                await CleanAsync((ITextChannel)Context.Channel,
                     message => message.Author.Id == user.Id || message.MentionedUserIds.Any(x => x == user.Id), max);
             }
 
             [Command("all", RunMode = RunMode.Async)]
             [Summary("Cleans messages in current channel.")]
-            public async Task CleanAllAsync([Summary("The maximum messages to view for deletion.")]
-                int max)
+            public async Task CleanAllAsync([Summary("The maximum messages to view for deletion.")] int max)
             {
-                await CleanAsync((ITextChannel) Context.Channel, message => true, max);
+                await CleanAsync((ITextChannel)Context.Channel, message => true, max);
             }
 
             private async Task CleanAsync(ITextChannel channel, Predicate<IMessage> predicate, int max)

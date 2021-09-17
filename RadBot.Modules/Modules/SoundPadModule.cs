@@ -24,10 +24,10 @@ namespace RadBot.Modules
     [Group("sp")]
     public class SoundPadModule : ModuleBase<SocketCommandContext>
     {
-        private readonly AppConfiguration _config;
-
         private static readonly Dictionary<ulong, CancellationTokenSource> _tokens =
             new Dictionary<ulong, CancellationTokenSource>();
+
+        private readonly AppConfiguration _config;
 
         public SoundPadModule(AppConfiguration config)
         {
@@ -98,8 +98,7 @@ namespace RadBot.Modules
 
         [Command("play", RunMode = RunMode.Async)]
         [Summary("Plays specified sound.")]
-        public async Task PlayAsync([Remainder] [Summary("The sound to play.")]
-            string sound)
+        public async Task PlayAsync([Remainder] [Summary("The sound to play.")] string sound)
         {
             var channel = Context.Guild.GetUser(Context.User.Id).VoiceChannel;
 
@@ -116,8 +115,7 @@ namespace RadBot.Modules
         [Command("fetch", RunMode = RunMode.Async)]
         [Alias("download", "meowpad", "meow")]
         [Summary("Downloads specified sound from https://meowpad.me.")]
-        public async Task FetchAsync([Remainder] [Summary("The sound to download.")]
-            string sound)
+        public async Task FetchAsync([Remainder] [Summary("The sound to download.")] string sound)
         {
             var sounds = MeowpadParser.FetchSound(sound, 1);
 
@@ -151,8 +149,7 @@ namespace RadBot.Modules
         [Command("fetch", RunMode = RunMode.Async)]
         [Alias("download", "meowpad", "meow")]
         [Summary("Downloads specified sound from https://meowpad.me.")]
-        public async Task FetchAsync([Remainder] [Summary("The id of sound to download.")]
-            int id)
+        public async Task FetchAsync([Remainder] [Summary("The id of sound to download.")] int id)
         {
             var sounds = MeowpadParser.FetchSoundById(id);
 
@@ -228,7 +225,7 @@ namespace RadBot.Modules
             // if not found
             if (files.Length == 0) return null;
 
-            return Path.GetFullPath(Path.Combine(Utilities.IsWindows() ? _config["soundPadPath"] : ".", files[0]));
+            return Path.GetFullPath(Path.Combine(Utilities.IsWindows ? _config["soundPadPath"] : ".", files[0]));
         }
 
         [Command("list")]
@@ -287,7 +284,7 @@ namespace RadBot.Modules
 
         private Process CreateStream(string path)
         {
-            var isWin = Utilities.IsWindows();
+            var isWin = Utilities.IsWindows;
 
             var args =
                 $"-loglevel fatal -i \"{path}\" -filter:a \"volume={_config["soundPadVolume"]}\" -ac 2 -f s16le -ar 48000 pipe:1";

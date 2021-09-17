@@ -16,8 +16,8 @@ namespace RadBot
     {
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
-        private readonly IServiceProvider _provider;
         private readonly AppConfiguration _config;
+        private readonly IServiceProvider _provider;
 
         // Retrieve client and CommandService instance via ctor
         public CommandHandler(DiscordSocketClient client, CommandService commands, IServiceProvider provider)

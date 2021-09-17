@@ -17,10 +17,10 @@ namespace RadBot
     internal class Program
     {
         private DiscordSocketClient _client;
-        private AppConfiguration _config;
-        private IServiceProvider _provider;
-        private CommandHandler _handler;
         private CommandService _commandService;
+        private AppConfiguration _config;
+        private CommandHandler _handler;
+        private IServiceProvider _provider;
 
         private static void Main(string[] args)
         {

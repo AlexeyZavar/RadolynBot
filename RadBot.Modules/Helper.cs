@@ -18,19 +18,18 @@ namespace RadBot
 {
     public static class Helper
     {
+        public const string Version = "0.5";
         public static DateTime BotStartedTime;
 
-        public static double UpTime => (DateTime.Now - BotStartedTime).TotalMilliseconds;
-
         public static string AppPath;
-
-        public const string Version = "0.3";
 
         private static AppConfiguration _config;
 
         private static readonly Random _random = new Random();
 
-        private static readonly HashSet<ulong> _ignoreUsers = new HashSet<ulong> {305414308320247818};
+        private static readonly HashSet<ulong> _ignoreUsers = new HashSet<ulong> { 305414308320247818 };
+
+        public static double UpTime => (DateTime.Now - BotStartedTime).TotalMilliseconds;
 
         public static void CheckIgnoreThrow(IUser user)
         {
@@ -58,22 +57,23 @@ namespace RadBot
         public static Task Initialize(AppConfiguration config)
         {
             BotStartedTime = DateTime.Now;
-            AppPath = new Uri(typeof(Config).Assembly.CodeBase!).LocalPath;
+            AppPath = new Uri(typeof(Config).Assembly.Location!).LocalPath;
 
             var oldPath = Environment.GetEnvironmentVariable("PATH");
 
             // path to some libs
             Environment.SetEnvironmentVariable("PATH",
                 oldPath + ";" + Path.Combine("Binaries", "Libs") + ";" +
-                Path.Combine("Binaries", "FFmpeg", Utilities.IsWindows() ? "win" : "linux"));
+                Path.Combine("Binaries", "FFmpeg", Utilities.IsWindows ? "win" : "linux"));
 
             // init config
             ConfigurationScheme.Ensure(config, typeof(Config));
 
             // check essential settings
-            if (config["token"] == "" || config["prefix"] == "" || config["builderColor"] == "")
+            if (string.IsNullOrWhiteSpace(config["token"]) || string.IsNullOrWhiteSpace(config["prefix"]) ||
+                string.IsNullOrWhiteSpace(config["builderColor"]))
             {
-                LogManager.GetMethodLogger().Fatal("Bot token\\prefix\\builderColor not specified in bot.conf!");
+                LogManager.GetMethodLogger().Fatal("Bot token\\prefix\\builderColor is not specified in bot.conf!");
                 Console.ReadLine();
                 Environment.Exit(-1);
             }
@@ -115,8 +115,8 @@ namespace RadBot
             var embedBuilder = new EmbedBuilder();
 
             embedBuilder.WithColor(GetEmbedColor());
-            embedBuilder.WithFooter("RadBot by Radolyn (v" + Version + " by AlexeyZavar#2198)",
-                "https://radolyn.com/img/rd.png");
+            embedBuilder.WithFooter("Sistine Legacy by Radolyn (v" + Version + " by AlexeyZavar#2198)",
+                "https://radolyn.com/shared/2.jpg");
 
             // todo: random gif
 

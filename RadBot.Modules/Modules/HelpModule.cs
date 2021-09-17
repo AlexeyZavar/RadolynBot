@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -16,9 +17,9 @@ namespace RadBot.Modules
     [Name("Random")]
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
-        private readonly CommandService _service;
         private readonly AppConfiguration _config;
         private readonly IServiceProvider _provider;
+        private readonly CommandService _service;
 
         public HelpModule(CommandService service, AppConfiguration config, IServiceProvider provider)
         {
@@ -50,13 +51,30 @@ namespace RadBot.Modules
                     if (!res.IsSuccess)
                         continue;
 
-                    var cmd = _config["bulletSymbol"] + " " +
-                              command.Aliases.Aggregate((current, item) =>
-                                  current + ", " + Environment.NewLine + _config["bulletSymbol"].Repeat(2) + " " +
-                                  item) + Environment.NewLine.Repeat(2);
+                    var cmd = new StringBuilder();
+                    if (command.Aliases.Count == 1)
+                    {
+                        cmd.Append($"🛆 {command.Aliases[0]}" + Environment.NewLine);
+                    }
+                    else
+                    {
+                        cmd.Append($"╔ {command.Aliases[0]}" + Environment.NewLine);
+                        var next = command.Aliases.Skip(1).SkipLast(1).ToList();
+                        if (next.Count != 0)
+                        {
+                            cmd.Append("╠ ");
+                            cmd.Append(next.Aggregate((current, item) =>
+                                current + Environment.NewLine + "╠ " +
+                                item) + Environment.NewLine);
+                        }
 
-                    if (!dict[localName].Contains(cmd))
-                        dict[localName] += cmd;
+                        cmd.Append($"╚ {command.Aliases[^1]}" + Environment.NewLine);
+                    }
+
+                    var s = cmd.ToString();
+
+                    if (!dict[localName].Contains(s))
+                        dict[localName] += s;
                 }
             }
 
