@@ -16,14 +16,14 @@ namespace RadBot.Modules
         [Command("echo")]
         [Alias("say")]
         [Summary("Echoes a message.")]
-        public async Task SayAsync([Remainder] [Summary("The text to echo")] string echo)
+        public async Task Say([Remainder] [Summary("The text to echo")] string echo)
         {
             await ReplyAsync(echo);
         }
 
         [Command("uptime")]
         [Summary("Prints up time in ms.")]
-        public async Task UptimeAsync()
+        public async Task Uptime()
         {
             await ReplyAsync("UpTime: " + Helper.UpTime + " ms");
         }
@@ -31,25 +31,18 @@ namespace RadBot.Modules
         [Command("exception")]
         [Alias("exc")]
         [Summary("Throws exception.")]
-        public Task ExceptionAsync()
+        public Task Exception()
         {
             throw new ApplicationException("Test exception");
         }
 
         [Command("shutdown")]
         [Summary("Shutdowns bot.")]
-        public async Task RestartAsync()
+        public async Task Shutdown()
         {
             await ReplyAsync("Shutting down bot. Current up time: " + Helper.UpTime + " ms.");
 
-            try
-            {
-                Environment.Exit(0);
-            }
-            catch (Exception e)
-            {
-                await ReplyAsync("Failed to shutdown bot." + Helper.FormatException(e));
-            }
+            Environment.Exit(0);
         }
     }
 }

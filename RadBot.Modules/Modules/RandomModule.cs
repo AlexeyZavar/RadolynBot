@@ -11,16 +11,9 @@ namespace RadBot.Modules
     [Name("Random")]
     public class RandomModule : ModuleBase<SocketCommandContext>
     {
-        private readonly AppConfiguration _config;
-
-        public RandomModule(AppConfiguration config)
-        {
-            _config = config;
-        }
-
         [Command("social")]
         [Summary("Prints developer's social links.")]
-        public async Task SocialAsync()
+        public async Task Social()
         {
             var embedBuilder = Helper.GetBuilder();
 

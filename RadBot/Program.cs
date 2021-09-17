@@ -20,7 +20,7 @@ namespace RadBot
         private static CommandService _commandService;
         private static AppConfiguration _config;
         private static CommandHandler _handler;
-        private static IServiceProvider _provider;
+        private static IServiceProvider _services;
 
         private static async Task Main()
         {
@@ -43,13 +43,13 @@ namespace RadBot
 
             _client.Log += Logging.LogClient;
 
-            _provider = new ServiceCollection()
+            _services = new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(_commandService)
                 .AddSingleton(_config)
                 .BuildServiceProvider();
 
-            _handler = new CommandHandler(_client, _commandService, _provider);
+            _handler = new CommandHandler(_client, _commandService, _services);
 
             await _handler.AddCommands();
 

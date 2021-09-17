@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Rest;
+using Discord.WebSocket;
 using NYoutubeDL;
 using RadLibrary.Configuration;
 using Serilog;
@@ -30,7 +31,7 @@ namespace RadBot.Modules
 
         [Command("dl", RunMode = RunMode.Async)]
         [Summary("Bridge to youtube-dl module.")]
-        public async Task YoutubeDownloadAsync([Remainder] [Summary("The url.")] string url)
+        public async Task YoutubeDownload([Remainder] [Summary("The url.")] string url)
         {
             var youtubeDl = new YoutubeDL
             {
@@ -60,7 +61,7 @@ namespace RadBot.Modules
         {
             [Command("what")]
             [Summary("Prints latest actions from specified user.")]
-            public async Task WhatAsync([Summary("The user.")] IUser user,
+            public async Task What([Summary("The user.")] IUser user,
                 [Summary("The amount of logs.")] int amount = 10, [Summary("The page.")] int page = 1)
             {
                 var allActions = await Context.Guild.GetAuditLogsAsync(250 * page, userId: user.Id).FlattenAsync();
@@ -72,7 +73,7 @@ namespace RadBot.Modules
 
             [Command("who")]
             [Summary("Prints latest actions with specified user.")]
-            public async Task WhoAsync([Summary("The user.")] IUser user,
+            public async Task Who([Summary("The user.")] IUser user,
                 [Summary("The amount of logs.")] int amount = 10, [Summary("The page.")] int page = 1)
             {
                 var allActions = await Context.Guild.GetAuditLogsAsync(250 * page).FlattenAsync();
@@ -226,58 +227,84 @@ namespace RadBot.Modules
         [Group("clean")]
         public class Cleaner : ModuleBase<SocketCommandContext>
         {
-            [Command("self", RunMode = RunMode.Async)]
-            [Summary("Cleans bot's messages in current channel.")]
-            public async Task CleanSelfAsync([Summary("The maximum messages to view for deletion.")] int max)
+            private readonly AppConfiguration _config;
+            public Cleaner(AppConfiguration config)
             {
-                await CleanAsync((ITextChannel)Context.Channel,
+                _config = config;
+            }
+            
+            [Command("self")]
+            [Summary("Cleans bot's messages in current channel.")]
+            public async Task CleanSelf([Summary("The maximum messages to view for deletion.")] int max)
+            {
+                await CleanAsync(Context.Channel,
                     message => message.Author.Id == Context.Client.CurrentUser.Id ||
                                message.MentionedUserIds.Any(x => x == Context.Client.CurrentUser.Id) ||
-                               message.Content.StartsWith('>'), max);
+                               message.Content.StartsWith(_config["prefix"]), max);
             }
 
-            [Command("user", RunMode = RunMode.Async)]
+            [Command("user")]
             [Summary("Cleans user's messages in current channel.")]
-            public async Task CleanSelfAsync([Summary("The maximum messages to view for deletion.")] int max,
+            public async Task CleanUser([Summary("The maximum messages to view for deletion.")] int max,
                 [Summary("The user.")] IUser user)
             {
-                await CleanAsync((ITextChannel)Context.Channel,
+                await CleanAsync(Context.Channel,
                     message => message.Author.Id == user.Id || message.MentionedUserIds.Any(x => x == user.Id), max);
             }
 
-            [Command("all", RunMode = RunMode.Async)]
-            [Summary("Cleans messages in current channel.")]
-            public async Task CleanAllAsync([Summary("The maximum messages to view for deletion.")] int max)
+            [Command]
+            public async Task Clean([Summary("The maximum messages to view for deletion.")] int max)
             {
-                await CleanAsync((ITextChannel)Context.Channel, message => true, max);
+                await CleanAsync(Context.Channel, message => true, max);
             }
 
-            private async Task CleanAsync(ITextChannel channel, Predicate<IMessage> predicate, int max)
+            private async Task CleanAsync(ISocketMessageChannel channel, Predicate<IMessage> predicate, int max)
             {
-                await ReplyAsync("Analyzing...");
+                var msgTask = await ReplyAsync("Analyzing (can be slow) ...");
 
-                var messages = await Context.Channel.GetMessagesAsync(max).FlattenAsync();
+                var messages = Context.Channel.GetMessagesAsync(msgTask, Direction.Before, max + 1);
 
                 var found = new List<IMessage>();
 
-                foreach (var message in messages)
+                var now = DateTimeOffset.Now;
+
+                var i = 0;
+
+                await foreach (var l in messages)
+                foreach (var message in l)
                 {
                     var res = predicate.Invoke(message);
-                    var days = (DateTimeOffset.Now - message.Timestamp).TotalDays;
-                    if (res && days >= 14)
+                    if (!res)
+                        continue;
+
+                    var days = (now - message.Timestamp).TotalDays;
+
+                    if (days >= 14)
                     {
                         await Context.Channel.DeleteMessageAsync(message);
-                        await Task.Delay(50);
+                        await Task.Delay(1050);
+
+                        ++i;
+
+                        if (i % 10 == 0)
+                            await msgTask.ModifyAsync(properties =>
+                                properties.Content = new Optional<string>($"Removed {i} messages"));
                     }
-                    else if (res && days < 14)
+                    else
                     {
                         found.Add(message);
                     }
                 }
 
-                await channel.DeleteMessagesAsync(found);
+                await msgTask.ModifyAsync(properties =>
+                    properties.Content = new Optional<string>("Removed all messages"));
 
-                await ReplyAsync("Cleaned!");
+                var t = ReplyAsync("Cleaned!");
+
+                if (found.Count != 0)
+                    await ((ITextChannel)channel).DeleteMessagesAsync(found);
+
+                await t;
             }
         }
     }

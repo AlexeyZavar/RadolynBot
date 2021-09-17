@@ -20,19 +20,17 @@ namespace RadBot
         public const string Version = "0.5";
         public static DateTime BotStartedTime;
 
-        public static string AppPath;
-
         private static AppConfiguration _config;
 
-        private static readonly Random _random = new Random();
+        private static readonly Random Random = new Random();
 
-        private static readonly HashSet<ulong> _ignoreUsers = new HashSet<ulong> { 305414308320247818 };
+        private static readonly HashSet<ulong> IgnoredUsers = new HashSet<ulong> { 305414308320247818 };
 
         public static double UpTime => (DateTime.Now - BotStartedTime).TotalMilliseconds;
 
         public static void CheckIgnoreThrow(IUser user)
         {
-            if (_ignoreUsers.Contains(user.Id))
+            if (IgnoredUsers.Contains(user.Id))
                 throw new Exception();
         }
 
@@ -43,21 +41,20 @@ namespace RadBot
         /// <returns></returns>
         public static bool CheckIgnoreBool(IUser user)
         {
-            return !_ignoreUsers.Contains(user.Id);
+            return !IgnoredUsers.Contains(user.Id);
         }
 
         public static string RandomString(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             return new string(Enumerable.Repeat(chars, length)
-                .Select(s => s[_random.Next(s.Length)]).ToArray());
+                .Select(s => s[Random.Next(s.Length)]).ToArray());
         }
 
         public static void Initialize(AppConfiguration config)
         {
             BotStartedTime = DateTime.Now;
-            AppPath = new Uri(typeof(Config).Assembly.Location!).LocalPath;
-
+            
             var oldPath = Environment.GetEnvironmentVariable("PATH");
 
             // path to some libs
@@ -69,7 +66,8 @@ namespace RadBot
             ConfigurationScheme.Ensure(config, typeof(Config));
 
             // check essential settings
-            if (string.IsNullOrWhiteSpace(config["token"]) || string.IsNullOrWhiteSpace(config["prefix"]) ||
+            if (string.IsNullOrWhiteSpace(config["token"]) || 
+                string.IsNullOrWhiteSpace(config["prefix"]) ||
                 string.IsNullOrWhiteSpace(config["builderColor"]))
             {
                 Log.Fatal("Bot token\\prefix\\builderColor is not specified in bot.conf!");

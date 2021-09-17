@@ -20,40 +20,32 @@ using Serilog;
 
 namespace RadBot.Modules
 {
-    [RequireBotPermission(GuildPermission.MoveMembers)]
-    [RequireBotPermission(GuildPermission.MuteMembers)]
-    [RequireBotPermission(GuildPermission.DeafenMembers)]
-    [RequireBotPermission(GuildPermission.KickMembers)]
-    [RequireBotPermission(GuildPermission.ViewChannel)]
-    [RequireUserPermission(GuildPermission.BanMembers)] // like admin
+    [RequireOwner]
     [Name("Fun")]
     [Group("fun")]
     public class FunModule : ModuleBase<SocketCommandContext>
     {
-        private static int FlightNumber;
+        private static int _flightNumber;
         private static readonly List<ulong> InFlight = new List<ulong>();
 
-        private static HashSet<ulong> InLock = new HashSet<ulong>();
-        private static readonly Random _random = new Random();
-
-        private static AppConfiguration _config;
-
-        public FunModule(AppConfiguration config, DiscordSocketClient client)
+        private static HashSet<ulong> _inLock = new HashSet<ulong>();
+        private static readonly Random Random = new Random();
+        
+        public FunModule(DiscordSocketClient client)
         {
             client.MessageReceived += ClientOnMessageReceived;
-            _config = config;
         }
 
         private static async Task ClientOnMessageReceived(SocketMessage msg)
         {
-            if (InLock.Contains(msg.Author.Id))
+            if (_inLock.Contains(msg.Author.Id))
                 await msg.Channel.DeleteMessageAsync(msg);
         }
 
-        [Command("tp", RunMode = RunMode.Async)]
-        [Alias("travel")]
+        [Command("travel", RunMode = RunMode.Async)]
+        [Alias("tp")]
         [Summary("Teleports user around all voice channels.")]
-        public async Task TpAsync([Remainder] [Summary("The user to tp")] IUser user)
+        public async Task Travel([Remainder] [Summary("The user to tp")] IUser user)
         {
             Helper.CheckIgnoreThrow(user);
             var channels = Context.Guild.VoiceChannels;
@@ -74,7 +66,7 @@ namespace RadBot.Modules
                 return;
             }
 
-            await ReplyAsync(user.Mention + " tobi pizda. Flex Airlines flight #" + ++FlightNumber);
+            await ReplyAsync(user.Mention + " tobi pizda. Flex Airlines flight #" + ++_flightNumber);
 
             await victim.ModifyAsync(properties =>
             {
@@ -114,12 +106,12 @@ namespace RadBot.Modules
 
             InFlight.Remove(victim.Id);
 
-            await ReplyAsync(user.Mention + ", Flex Airlines flight #" + FlightNumber + " finished successfully.");
+            await ReplyAsync(user.Mention + ", Flex Airlines flight #" + _flightNumber + " finished successfully.");
         }
 
         [Command("lock", RunMode = RunMode.Async)]
         [Summary("Prevents user from connecting to any voice channel.")]
-        public async Task LockAsync([Summary("The user to lock.")] IUser user,
+        public async Task Lock([Summary("The user to lock.")] IUser user,
             [Summary("The time to lock for.")] TimeSpan time = default)
         {
             if (!Helper.CheckIgnoreBool(user))
@@ -130,19 +122,19 @@ namespace RadBot.Modules
 
             var victim = Context.Guild.GetUser(user.Id);
 
-            if (InLock.Contains(victim.Id))
+            if (_inLock.Contains(victim.Id))
             {
                 await ReplyAsync(user.Mention + " is already in lock.");
                 return;
             }
 
-            InLock.Add(user.Id);
+            _inLock.Add(user.Id);
 
             await ReplyAsync(user.Mention + ", you're locked for " + time.TotalSeconds + " seconds.");
 
             var stopwatch = Stopwatch.StartNew();
 
-            while (stopwatch.ElapsedMilliseconds < time.TotalMilliseconds && InLock.Contains(user.Id))
+            while (stopwatch.ElapsedMilliseconds < time.TotalMilliseconds && _inLock.Contains(user.Id))
             {
                 victim = Context.Guild.GetUser(user.Id);
 
@@ -157,7 +149,7 @@ namespace RadBot.Modules
                 await Task.Delay(750);
             }
 
-            InLock.Remove(user.Id);
+            _inLock.Remove(user.Id);
 
             await ReplyAsync(user.Mention + ", you can join now.");
 
@@ -177,7 +169,7 @@ namespace RadBot.Modules
 
         [Command("lock", RunMode = RunMode.Async)]
         [Summary("Prevents users from connecting to any voice channel.")]
-        public Task LockAsync([Summary("The time to lock for.")] TimeSpan time = default)
+        public Task Lock([Summary("The time to lock for.")] TimeSpan time = default)
         {
             if (time == default)
                 time = new TimeSpan(TimeSpan.TicksPerDay);
@@ -186,7 +178,7 @@ namespace RadBot.Modules
 
             foreach (var socketGuildUser in victims.Users)
             {
-                Task.Run(() => LockAsync(socketGuildUser, time));
+                Task.Run(() => Lock(socketGuildUser, time));
                 Task.Delay(750);
             }
 
@@ -195,9 +187,9 @@ namespace RadBot.Modules
 
         [Command("unlock")]
         [Summary("Allows user to join voice channels again.")]
-        public async Task UnlockAsync([Summary("The user to unlock.")] IUser user = default)
+        public async Task Unlock([Summary("The user to unlock.")] IUser user = default)
         {
-            if (InLock.Contains(Context.User.Id))
+            if (_inLock.Contains(Context.User.Id))
             {
                 await ReplyAsync(Context.User.Mention + ", you cannot unlock anyone while you're in lock.");
                 return;
@@ -205,22 +197,22 @@ namespace RadBot.Modules
 
             if (user == default)
             {
-                InLock = new HashSet<ulong>();
+                _inLock = new HashSet<ulong>();
                 return;
             }
 
-            if (!InLock.Contains(user.Id))
+            if (!_inLock.Contains(user.Id))
             {
                 await ReplyAsync(user.Mention + " is not locked.");
                 return;
             }
 
-            InLock.Remove(user.Id);
+            _inLock.Remove(user.Id);
         }
 
         [Command("spam", RunMode = RunMode.Async)]
         [Summary("Spams message.")]
-        public async Task SpamAsync([Summary("How many times to repeat.")] int times,
+        public async Task Spam([Summary("How many times to repeat.")] int times,
             [Remainder] [Summary("The message.")] string msg)
         {
             for (var i = 0; i < times; i++)
@@ -232,7 +224,7 @@ namespace RadBot.Modules
 
         [Command("meme")]
         [Summary("Prints meme (Russian).")]
-        public async Task MemeAsync()
+        public async Task RussianMeme()
         {
             var wc = new WebClient();
 
@@ -245,18 +237,18 @@ namespace RadBot.Modules
 
         [Command("randomperson")]
         [Summary("Picks a random person from current channel.")]
-        public async Task RandomPersonAsync()
+        public async Task RandomPerson()
         {
             var users = (await Context.Channel.GetUsersAsync().FlattenAsync()).ToList();
 
-            var num = _random.Next(users.Count);
+            var num = Random.Next(users.Count);
 
             await ReplyAsync(users[num].Username);
         }
 
         [Command("fuck")]
         [Summary("Spam to PM.")]
-        public async Task FuckAsync(IUser user, [Remainder] string message)
+        public async Task Fuck(IUser user, [Remainder] string message)
         {
             var channel = await user.GetOrCreateDMChannelAsync();
 
@@ -265,7 +257,7 @@ namespace RadBot.Modules
 
         [Command("joinspam", RunMode = RunMode.Async)]
         [Summary("Voice join\\disconnect spam.")]
-        public async Task JoinSpamAsync([Summary("The voice channel.")] SocketVoiceChannel channel,
+        public async Task JoinSpam([Summary("The voice channel.")] SocketVoiceChannel channel,
             [Summary("How many times to repeat.")] int times)
         {
             for (var i = 0; i < times; ++i)
@@ -290,7 +282,7 @@ namespace RadBot.Modules
 
         [Command("joinspam", RunMode = RunMode.Async)]
         [Summary("Voice join\\disconnect spam.")]
-        public async Task JoinSpamAsync([Summary("The voice channel.")] IGuildUser user,
+        public async Task JoinSpam([Summary("The voice channel.")] IGuildUser user,
             [Summary("How many times to repeat.")] int times)
         {
             for (var i = 0; i < times; ++i)
@@ -316,8 +308,7 @@ namespace RadBot.Modules
                 {
                 }
         }
-
-        //[RequireOwner]
+        
         [Name("Raid")]
         [Group("raid")]
         private class RaidModule : ModuleBase<SocketCommandContext>
@@ -332,7 +323,7 @@ namespace RadBot.Modules
             [Command("verify", RunMode = RunMode.Async)]
             [Alias("ensure")]
             [Summary("Verifies that we can raid this channel.")]
-            public async Task VerifyAsync()
+            public async Task Verify()
             {
                 var bot = Context.Guild.GetUser(Context.Client.CurrentUser.Id);
 
@@ -344,12 +335,11 @@ namespace RadBot.Modules
                 var msg = await ReplyAsync(Context.User.Mention + text);
                 await Task.Delay(1500);
                 await msg.DeleteAsync();
-                await Context.Message.DeleteAsync();
             }
 
             [Command("flood", RunMode = RunMode.Async)]
             [Summary("Creates many voice channels.")]
-            public async Task VoiceFloodAsync()
+            public async Task VoiceFlood()
             {
                 for (var i = 0; i < int.MaxValue; ++i)
                     try
@@ -365,7 +355,7 @@ namespace RadBot.Modules
 
             [Command("unflood", RunMode = RunMode.Async)]
             [Summary("Removes flooded voice channels.")]
-            public async Task VoiceUnFloodAsync()
+            public async Task VoiceUnFlood()
             {
                 var channels = Context.Guild.VoiceChannels;
 
@@ -384,7 +374,7 @@ namespace RadBot.Modules
 
             [Command("unflood", RunMode = RunMode.Async)]
             [Summary("Removes voice channels by regex.")]
-            public async Task VoiceUnFloodAsync([Remainder] string regex)
+            public async Task VoiceUnFlood([Remainder] string regex)
             {
                 var channels = Context.Guild.VoiceChannels;
 
@@ -404,7 +394,7 @@ namespace RadBot.Modules
 
             [Command("nick", RunMode = RunMode.Async)]
             [Summary("Sets all nicknames of current guild members to provided.")]
-            public async Task NickAsync([Remainder] [Summary("The nickname.")] string nick)
+            public async Task Nick([Remainder] [Summary("The nickname.")] string nick)
             {
                 var users = Context.Guild.Users;
 
@@ -414,11 +404,11 @@ namespace RadBot.Modules
                     try
                     {
                         await user.ModifyAsync(properties => properties.Nickname = nick);
-                        Log.Information("Set nickname for {0}", user.Username);
+                        Log.Information("Set nickname for {Username}", user.Username);
                     }
                     catch
                     {
-                        Log.Warning("Failed to set nickname for {0}", user.Username);
+                        Log.Warning("Failed to set nickname for {Username}", user.Username);
                     }
 
                 var msg = await ReplyAsync("Done!");
@@ -428,7 +418,7 @@ namespace RadBot.Modules
 
             [Command("nicks", RunMode = RunMode.Async)]
             [Summary("Sets all nicknames of current guild members to provided.")]
-            public async Task NicksAsync([Summary("The nicknames.")] params string[] nicks)
+            public async Task Nicks([Summary("The nicknames.")] params string[] nicks)
             {
                 var users = Context.Guild.Users;
 
@@ -450,7 +440,7 @@ namespace RadBot.Modules
 
             [Command("unnick", RunMode = RunMode.Async)]
             [Summary("Restores all nicks to default.")]
-            public async Task UnNickAsync()
+            public async Task UnNick()
             {
                 var users = Context.Guild.Users;
 

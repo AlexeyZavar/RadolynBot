@@ -17,19 +17,19 @@ namespace RadBot.Modules
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
         private readonly AppConfiguration _config;
-        private readonly IServiceProvider _provider;
+        private readonly IServiceProvider _services;
         private readonly CommandService _service;
 
-        public HelpModule(CommandService service, AppConfiguration config, IServiceProvider provider)
+        public HelpModule(CommandService service, AppConfiguration config, IServiceProvider services)
         {
             _service = service;
             _config = config;
-            _provider = provider;
+            _services = services;
         }
 
         [Command("help")]
         [Summary("Prints help message.")]
-        public async Task HelpAsync()
+        public async Task Help()
         {
             var builder = Helper.GetBuilder();
 
@@ -45,7 +45,7 @@ namespace RadBot.Modules
 
                 foreach (var command in module.Commands)
                 {
-                    var res = await command.CheckPreconditionsAsync(Context, _provider);
+                    var res = await command.CheckPreconditionsAsync(Context, _services);
 
                     if (!res.IsSuccess)
                         continue;
@@ -75,7 +75,7 @@ namespace RadBot.Modules
 
             foreach (var (module, s) in dict)
             {
-                if (dict[module] == "")
+                if (string.IsNullOrWhiteSpace(dict[module]))
                     continue;
 
                 fields.Add(new EmbedFieldBuilder
@@ -94,7 +94,7 @@ namespace RadBot.Modules
 
         [Command("help")]
         [Summary("Prints help message about specified command.")]
-        public async Task HelpAsync([Remainder] [Summary("The command")] string command)
+        public async Task Help([Remainder] [Summary("The command")] string command)
         {
             var found = _service.Search(command);
 

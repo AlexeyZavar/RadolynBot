@@ -24,7 +24,7 @@ namespace RadBot.Modules
     [Group("sp")]
     public class SoundPadModule : ModuleBase<SocketCommandContext>
     {
-        private static readonly Dictionary<ulong, CancellationTokenSource> _tokens =
+        private static readonly Dictionary<ulong, CancellationTokenSource> Tokens =
             new Dictionary<ulong, CancellationTokenSource>();
 
         private readonly AppConfiguration _config;
@@ -50,7 +50,7 @@ namespace RadBot.Modules
 
         [Command("play", RunMode = RunMode.Async)]
         [Summary("Plays specified sound.")]
-        public async Task PlayAsync([Summary("The channel to play in")] SocketVoiceChannel channel,
+        public async Task Play([Summary("The channel to play in")] SocketVoiceChannel channel,
             [Remainder] [Summary("The sound to play.")]
             string sound)
         {
@@ -92,13 +92,13 @@ namespace RadBot.Modules
 
             await Task.Delay(650);
 
-            if (!_tokens[Context.Guild.Id].IsCancellationRequested)
+            if (!Tokens[Context.Guild.Id].IsCancellationRequested)
                 await channel.DisconnectAsync();
         }
 
         [Command("play", RunMode = RunMode.Async)]
         [Summary("Plays specified sound.")]
-        public async Task PlayAsync([Remainder] [Summary("The sound to play.")] string sound)
+        public async Task Play([Remainder] [Summary("The sound to play.")] string sound)
         {
             var channel = Context.Guild.GetUser(Context.User.Id).VoiceChannel;
 
@@ -109,13 +109,13 @@ namespace RadBot.Modules
                 return;
             }
 
-            await PlayAsync(channel, sound);
+            await Play(channel, sound);
         }
 
         [Command("fetch", RunMode = RunMode.Async)]
         [Alias("download", "meowpad", "meow")]
         [Summary("Downloads specified sound from https://meowpad.me.")]
-        public async Task FetchAsync([Remainder] [Summary("The sound to download.")] string sound)
+        public async Task Fetch([Remainder] [Summary("The sound to download.")] string sound)
         {
             var sounds = MeowpadParser.FetchSound(sound, 1);
 
@@ -149,7 +149,7 @@ namespace RadBot.Modules
         [Command("fetch", RunMode = RunMode.Async)]
         [Alias("download", "meowpad", "meow")]
         [Summary("Downloads specified sound from https://meowpad.me.")]
-        public async Task FetchAsync([Remainder] [Summary("The id of sound to download.")] int id)
+        public async Task Fetch([Remainder] [Summary("The id of sound to download.")] int id)
         {
             var sounds = MeowpadParser.FetchSoundById(id);
 
@@ -166,71 +166,9 @@ namespace RadBot.Modules
             await msg.ModifyAsync(properties => properties.Content = res ? "Downloaded!" : "Failed to download!");
         }
 
-        private async Task PlaySound(IAudioClient voice, string file)
-        {
-            try
-            {
-                // create audio streams
-                var stream = voice.CreatePCMStream(AudioApplication.Mixed, null, 200);
-                var soundStream = CreateStream(file);
-
-                // copy audio from ffmpeg to pcm stream
-                await soundStream.StandardOutput.BaseStream.CopyToAsync(stream, _tokens[Context.Guild.Id].Token);
-
-                await stream.FlushAsync(_tokens[Context.Guild.Id].Token);
-            }
-            catch (HttpException)
-            {
-                // ok (disconnected)
-            }
-        }
-
-        private async Task<IAudioClient> ConnectToVoice(IAudioChannel channel)
-        {
-            IAudioClient voice;
-
-            var current = Context.Guild.GetUser(Context.Client.CurrentUser.Id).VoiceChannel;
-
-            // connect if not connected
-            if (current?.Id != channel.Id)
-            {
-                voice = await channel.ConnectAsync(true);
-            }
-            else // if already in channel, cancel sound that playing right now
-            {
-                voice = Context.Guild.AudioClient;
-                _tokens[Context.Guild.Id].Cancel(true);
-                await Task.Delay(100);
-            }
-
-            // set cancellation token
-            if (_tokens.ContainsKey(Context.Guild.Id))
-                _tokens[Context.Guild.Id] = new CancellationTokenSource();
-            else
-                _tokens.Add(Context.Guild.Id, new CancellationTokenSource());
-
-            // un mute bot
-            await Context.Guild.GetUser(Context.Client.CurrentUser.Id)
-                .ModifyAsync(properties => properties.Mute = false);
-
-            // get full path to first sound that matches string
-            return voice;
-        }
-
-        private string GetFile(string sound)
-        {
-            // find all sounds matches string
-            var files = Directory.GetFiles(_config["soundPadPath"], sound + "*");
-
-            // if not found
-            if (files.Length == 0) return null;
-
-            return Path.GetFullPath(Path.Combine(Utilities.IsWindows ? _config["soundPadPath"] : ".", files[0]));
-        }
-
         [Command("list")]
         [Summary("Prints all available sounds.")]
-        public async Task ListAsync()
+        public async Task List()
         {
             var files = Directory.EnumerateFiles(_config["soundPadPath"]);
 
@@ -263,7 +201,7 @@ namespace RadBot.Modules
         [Command("volume", RunMode = RunMode.Async)]
         [Alias("vol")]
         [Summary("Prints volume.")]
-        public async Task VolumeTask()
+        public async Task GetVolume()
         {
             var msg = await ReplyAsync($"Current volume multiplier: {_config["soundPadVolume"]}x");
 
@@ -275,11 +213,73 @@ namespace RadBot.Modules
         [Command("volume")]
         [Alias("vol")]
         [Summary("Sets volume.")]
-        public Task VolumeTask([Remainder] [Summary("The volume.")] int volume)
+        public Task SetVolume([Remainder] [Summary("The volume.")] int volume)
         {
             _config["soundPadVolume"] = volume.ToString();
 
             return Task.CompletedTask;
+        }
+
+        private async Task PlaySound(IAudioClient voice, string file)
+        {
+            try
+            {
+                // create audio streams
+                var stream = voice.CreatePCMStream(AudioApplication.Mixed, null, 200);
+                var soundStream = CreateStream(file);
+
+                // copy audio from ffmpeg to pcm stream
+                await soundStream.StandardOutput.BaseStream.CopyToAsync(stream, Tokens[Context.Guild.Id].Token);
+
+                await stream.FlushAsync(Tokens[Context.Guild.Id].Token);
+            }
+            catch (HttpException)
+            {
+                // ok (disconnected)
+            }
+        }
+
+        private async Task<IAudioClient> ConnectToVoice(IAudioChannel channel)
+        {
+            IAudioClient voice;
+
+            var current = Context.Guild.GetUser(Context.Client.CurrentUser.Id).VoiceChannel;
+
+            // connect if not connected
+            if (current?.Id != channel.Id)
+            {
+                voice = await channel.ConnectAsync(true);
+            }
+            else // if already in channel, cancel sound that playing right now
+            {
+                voice = Context.Guild.AudioClient;
+                Tokens[Context.Guild.Id].Cancel(true);
+                await Task.Delay(100);
+            }
+
+            // set cancellation token
+            if (Tokens.ContainsKey(Context.Guild.Id))
+                Tokens[Context.Guild.Id] = new CancellationTokenSource();
+            else
+                Tokens.Add(Context.Guild.Id, new CancellationTokenSource());
+
+            // un mute bot
+            await Context.Guild.GetUser(Context.Client.CurrentUser.Id)
+                .ModifyAsync(properties => properties.Mute = false);
+
+            // get full path to first sound that matches string
+            return voice;
+        }
+
+        private string GetFile(string sound)
+        {
+            // find all sounds matches string
+            var files = Directory.GetFiles(_config["soundPadPath"], sound + "*");
+
+            // if not found
+            if (files.Length == 0) return null;
+
+            return Path.GetFullPath(Path.Combine(Utilities.IsWindows ? _config["soundPadPath"] : ".", files[0]));
         }
 
         private Process CreateStream(string path)

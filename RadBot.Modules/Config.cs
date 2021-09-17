@@ -6,7 +6,7 @@ using RadLibrary.Configuration.Scheme;
 
 namespace RadBot
 {
-    public class Config
+    public sealed class Config
     {
         [SchemeParameter(Comment = "The embed builder's color (hex format)")]
         public string BuilderColor;
