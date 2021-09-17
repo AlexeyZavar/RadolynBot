@@ -2,110 +2,84 @@
 
 using System;
 using System.Threading.Tasks;
-using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 using RadLibrary.Configuration;
-using RadLibrary.Logging;
 
 #endregion
 
 namespace RadBot
 {
-    public class CommandHandler
+    public sealed class CommandHandler
     {
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commands;
         private readonly AppConfiguration _config;
-        private readonly IServiceProvider _provider;
+        private readonly IServiceProvider _services;
 
         // Retrieve client and CommandService instance via ctor
-        public CommandHandler(DiscordSocketClient client, CommandService commands, IServiceProvider provider)
+        public CommandHandler(DiscordSocketClient client, CommandService commands, IServiceProvider services)
         {
-            _commands = commands;
             _client = client;
-            _provider = provider;
-            _config = _provider.GetService(typeof(AppConfiguration)) as AppConfiguration;
+            _commands = commands;
+            _services = services;
+
+            _config = _services.GetService(typeof(AppConfiguration)) as AppConfiguration;
         }
 
-        public async Task InstallCommandsAsync()
+        public async Task AddCommands()
         {
             // Hook the MessageReceived event into our command handler
             _client.MessageReceived += HandleCommandAsync;
-
-            _commands.CommandExecuted += LogCommand;
+            _commands.CommandExecuted += Logging.LogCommandService;
 
             await _commands.AddModulesAsync(typeof(Config).Assembly,
-                _provider);
-        }
-
-        private static async Task LogCommand(Optional<CommandInfo> cmd, ICommandContext context, IResult result)
-        {
-            string command;
-
-            if (!cmd.IsSpecified)
-            {
-                command = "<unknown>";
-            }
-            else
-            {
-                var module = cmd.Value?.Module?.Aliases?[0];
-                command = !string.IsNullOrEmpty(module) ? module + " " + cmd.Value?.Name : cmd.Value?.Name;
-            }
-
-            var logger = LogManager.GetClassLogger();
-            logger.Info("User {0} issued \"{1}\" command. Result: {2} ({3})", context.User.Username, command,
-                result.IsSuccess, result.ErrorReason);
-
-            var res = result as ExecuteResult?;
-
-            if (res?.IsSuccess == true || cmd.GetValueOrDefault() == null || string.IsNullOrEmpty(res?.ErrorReason))
-                return;
-
-            await context.Channel.SendMessageAsync("Failed to execute command. Exception: ```yml" +
-                                                   Environment.NewLine + Helper.FormatException(res?.Exception) +
-                                                   "```<@305414308320247818>");
+                _services);
         }
 
         private async Task HandleCommandAsync(SocketMessage messageParam)
         {
-            // Don't process the command if it was a system message
-            if (!(messageParam is SocketUserMessage message)) return;
+            if (messageParam is not SocketUserMessage message || message.Author.IsBot) return;
 
-            // Create a number to track where the prefix ends and the command begins
             var argPos = 0;
 
-            // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-            if (!message.HasStringPrefix(_config["prefix"], ref argPos) &&
-                !message.HasMentionPrefix(_client.CurrentUser, ref argPos) || message.Author.IsBot)
+            if (!message.HasStringPrefix(_config["prefix"], ref argPos))
                 return;
 
-            // Create a WebSocket-based command context based on the message
             var context = new SocketCommandContext(_client, message);
 
-            // Execute the command with the command context we just
-            // created, along with the service provider for precondition checks.
+            var scope = _services.CreateScope();
             var result = await _commands.ExecuteAsync(
                 context,
                 argPos,
-                _provider);
+                scope.ServiceProvider);
 
             if (!result.IsSuccess)
                 switch (result.Error)
                 {
                     case CommandError.UnknownCommand:
                         await context.Channel.SendMessageAsync(
-                            "Unknown command! Type '>help' to get all available commands.");
+                            $"What do you mean?! `{_config["prefix"]}help` if you don't know how to *use* me...");
                         break;
                     case CommandError.ParseFailed:
                     case CommandError.BadArgCount:
-                    case CommandError.MultipleMatches:
                     case CommandError.ObjectNotFound:
+                    case CommandError.MultipleMatches:
                         await context.Channel.SendMessageAsync(
-                            "Failed to parse parameters! Type '>help COMMAND' to get help.");
+                            $"I think that you don't know how to use this command properly... `{_config["prefix"]}help COMMAND` to see how to *use* this command.");
                         break;
                     case CommandError.UnmetPrecondition:
-                        await context.Channel.SendMessageAsync("Not enough permissions.");
+                        await context.Channel.SendMessageAsync("I think you don't have enough permissions!");
+                        break;
+                    case CommandError.Exception:
+                        // handled in LogCommand
+                        break;
+                    case CommandError.Unsuccessful:
+                        // handled in LogCommand
+                        break;
+                    case null:
+                        // ???
                         break;
                 }
         }

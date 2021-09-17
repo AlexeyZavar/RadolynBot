@@ -9,7 +9,6 @@ namespace RadBot.Modules.Helpers.Meowpad
 {
     public static class MeowpadParser
     {
-        // todo: consider using RestSharp (???)
         private static readonly WebClient _wc = new WebClient();
 
         public static MeowpadData FetchSound(string name, int page)

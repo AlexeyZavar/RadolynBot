@@ -10,7 +10,7 @@ using Discord.Commands;
 using Discord.Rest;
 using NYoutubeDL;
 using RadLibrary.Configuration;
-using RadLibrary.Logging;
+using Serilog;
 
 #endregion
 
@@ -45,7 +45,7 @@ namespace RadBot.Modules
             youtubeDl.StandardOutputEvent += (sender, s) =>
             {
                 downloadUrl += s + Environment.NewLine;
-                LogManager.GetClassLogger().Trace(s);
+                Log.Verbose(s);
             };
 
             await youtubeDl.PrepareDownloadAsync();

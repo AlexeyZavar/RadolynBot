@@ -35,7 +35,7 @@ namespace RadBot.Modules
         {
             throw new ApplicationException("Test exception");
         }
-        
+
         [Command("shutdown")]
         [Summary("Shutdowns bot.")]
         public async Task RestartAsync()

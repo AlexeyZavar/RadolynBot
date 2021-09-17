@@ -8,32 +8,31 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using RadLibrary.Configuration;
 using RadLibrary.Configuration.Managers;
-using RadLibrary.Logging;
+using Serilog;
 
 #endregion
 
 namespace RadBot
 {
-    internal class Program
+    internal static class Program
     {
-        private DiscordSocketClient _client;
-        private CommandService _commandService;
-        private AppConfiguration _config;
-        private CommandHandler _handler;
-        private IServiceProvider _provider;
+        private static DiscordSocketClient _client;
+        private static CommandService _commandService;
+        private static AppConfiguration _config;
+        private static CommandHandler _handler;
+        private static IServiceProvider _provider;
 
-        private static void Main(string[] args)
+        private static async Task Main()
         {
-            new Program().MainAsync().GetAwaiter().GetResult();
-        }
-
-        private async Task MainAsync()
-        {
-            LogManager.AddExceptionsHandler();
+            var logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .WriteTo.File("bot.log")
+                .CreateLogger();
+            Log.Logger = logger;
 
             _config = AppConfiguration.Initialize<FileManager>("bot");
 
-            await Helper.Initialize(_config);
+            Helper.Initialize(_config);
 
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {
@@ -42,7 +41,7 @@ namespace RadBot
 
             _commandService = new CommandService();
 
-            _client.Log += Log;
+            _client.Log += Logging.LogClient;
 
             _provider = new ServiceCollection()
                 .AddSingleton(_client)
@@ -52,44 +51,13 @@ namespace RadBot
 
             _handler = new CommandHandler(_client, _commandService, _provider);
 
-            await _handler.InstallCommandsAsync();
+            await _handler.AddCommands();
 
             await _client.LoginAsync(TokenType.Bot, _config["token"]);
-            await _client.SetActivityAsync(new Game("Radolyn's Maid"));
+            await _client.SetActivityAsync(new Game("cute maid"));
             await _client.StartAsync();
 
             await Task.Delay(-1);
-        }
-
-        private static Task Log(LogMessage msg)
-        {
-            var logger = LogManager.GetClassLogger();
-
-            switch (msg.Severity)
-            {
-                case LogSeverity.Critical:
-                    logger.Fatal(Helper.FormatException(msg.Exception));
-                    break;
-                case LogSeverity.Error:
-                    logger.Error(Helper.FormatException(msg.Exception));
-                    break;
-                case LogSeverity.Warning:
-                    logger.Warn(msg.Message);
-                    break;
-                case LogSeverity.Info:
-                    logger.Info(msg.Message);
-                    break;
-                case LogSeverity.Verbose:
-                    logger.Trace(msg.Message);
-                    break;
-                case LogSeverity.Debug:
-                    logger.Debug(msg.Message);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            return Task.CompletedTask;
         }
     }
 }

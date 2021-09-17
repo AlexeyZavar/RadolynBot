@@ -4,13 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Discord;
 using RadLibrary;
 using RadLibrary.Colors;
 using RadLibrary.Configuration;
 using RadLibrary.Configuration.Scheme;
-using RadLibrary.Logging;
+using Serilog;
 
 #endregion
 
@@ -54,7 +53,7 @@ namespace RadBot
                 .Select(s => s[_random.Next(s.Length)]).ToArray());
         }
 
-        public static Task Initialize(AppConfiguration config)
+        public static void Initialize(AppConfiguration config)
         {
             BotStartedTime = DateTime.Now;
             AppPath = new Uri(typeof(Config).Assembly.Location!).LocalPath;
@@ -73,17 +72,13 @@ namespace RadBot
             if (string.IsNullOrWhiteSpace(config["token"]) || string.IsNullOrWhiteSpace(config["prefix"]) ||
                 string.IsNullOrWhiteSpace(config["builderColor"]))
             {
-                LogManager.GetMethodLogger().Fatal("Bot token\\prefix\\builderColor is not specified in bot.conf!");
+                Log.Fatal("Bot token\\prefix\\builderColor is not specified in bot.conf!");
                 Console.ReadLine();
                 Environment.Exit(-1);
             }
 
             config.HotReload = true;
-
             _config = config;
-
-
-            return Task.CompletedTask;
         }
 
         public static string FormatException(Exception e)
@@ -99,9 +94,7 @@ namespace RadBot
             if (s == null)
                 return "<nah>";
 
-            if (s.Length <= length)
-                return s;
-            return s.Substring(0, length);
+            return s.Length <= length ? s : s[..length];
         }
 
         private static Color GetEmbedColor()

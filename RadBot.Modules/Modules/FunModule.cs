@@ -14,8 +14,7 @@ using Discord.WebSocket;
 using Newtonsoft.Json;
 using RadLibrary;
 using RadLibrary.Configuration;
-using RadLibrary.Logging;
-using RadLibrary.Logging.Loggers;
+using Serilog;
 
 #endregion
 
@@ -356,12 +355,11 @@ namespace RadBot.Modules
                     try
                     {
                         await Context.Guild.CreateVoiceChannelAsync(i.ToString());
-                        LogManager.GetLogger<ConsoleLogger>("RAID_MODULE").Info("CREATED {0} VOICE CHANNEL", i);
+                        Log.Information("CREATED {Count} VOICE CHANNEL", i);
                     }
                     catch
                     {
-                        LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
-                            .Warn("FAILED TO CREATE {0} VOICE CHANNEL", i);
+                        Log.Warning("FAILED TO CREATE {Count} VOICE CHANNEL", i);
                     }
             }
 
@@ -376,13 +374,11 @@ namespace RadBot.Modules
                         try
                         {
                             await channel.DeleteAsync();
-                            LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
-                                .Info("DELETED {0} VOICE CHANNEL", channel.Name);
+                            Log.Information("DELETED {ChannelName} VOICE CHANNEL", channel.Name);
                         }
                         catch
                         {
-                            LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
-                                .Warn("FAILED TO DELETE {0} VOICE CHANNEL", channel.Name);
+                            Log.Warning("FAILED TO DELETE {ChannelName} VOICE CHANNEL", channel.Name);
                         }
             }
 
@@ -398,13 +394,11 @@ namespace RadBot.Modules
                     try
                     {
                         await channel.DeleteAsync();
-                        LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
-                            .Info("DELETED {0} VOICE CHANNEL", channel.Name);
+                        Log.Information("DELETED {ChannelName} VOICE CHANNEL", channel.Name);
                     }
                     catch
                     {
-                        LogManager.GetLogger<ConsoleLogger>("RAID_MODULE")
-                            .Warn("FAILED TO DELETE {0} VOICE CHANNEL", channel.Name);
+                        Log.Warning("FAILED TO DELETE {ChannelName} VOICE CHANNEL", channel.Name);
                     }
             }
 
@@ -416,17 +410,15 @@ namespace RadBot.Modules
 
                 var botRole = Context.Guild.CurrentUser.Roles.Max(x => x.Position);
 
-                var logger = LogManager.GetMethodLogger();
-
                 foreach (var user in users.Where(user => !user.Roles.Any(x => x.Position >= botRole)))
                     try
                     {
                         await user.ModifyAsync(properties => properties.Nickname = nick);
-                        logger.Info("Set nickname for {0}", user.Username);
+                        Log.Information("Set nickname for {0}", user.Username);
                     }
                     catch
                     {
-                        logger.Warn("Failed to set nickname for {0}", user.Username);
+                        Log.Warning("Failed to set nickname for {0}", user.Username);
                     }
 
                 var msg = await ReplyAsync("Done!");
@@ -440,19 +432,15 @@ namespace RadBot.Modules
             {
                 var users = Context.Guild.Users;
 
-                var botRole = Context.Guild.CurrentUser.Roles.Max(x => x.Position);
-
-                var logger = LogManager.GetMethodLogger();
-
                 foreach (var user in users)
                     try
                     {
                         await user.ModifyAsync(properties => properties.Nickname = nicks.RandomItem());
-                        logger.Info("Set nickname for {0}", user.Username);
+                        Log.Information("Set nickname for {Username}", user.Username);
                     }
                     catch
                     {
-                        logger.Warn("Failed to set nickname for {0}", user.Username);
+                        Log.Warning("Failed to set nickname for {Username}", user.Username);
                     }
 
                 var msg = await ReplyAsync("Done!");
@@ -466,19 +454,15 @@ namespace RadBot.Modules
             {
                 var users = Context.Guild.Users;
 
-                var botRole = Context.Guild.CurrentUser.Roles.Max(x => x.Position);
-
-                var logger = LogManager.GetMethodLogger();
-
                 foreach (var user in users)
                     try
                     {
                         await user.ModifyAsync(properties => properties.Nickname = null);
-                        logger.Info("Restored nickname for {0}", user.Username);
+                        Log.Information("Restored nickname for {Username}", user.Username);
                     }
                     catch
                     {
-                        logger.Warn("Failed to restore nickname for {0}", user.Username);
+                        Log.Warning("Failed to restore nickname for {Username}", user.Username);
                     }
 
                 var msg = await ReplyAsync("Done!");

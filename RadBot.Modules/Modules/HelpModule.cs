@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using RadLibrary;
 using RadLibrary.Configuration;
 
 #endregion
@@ -54,21 +53,17 @@ namespace RadBot.Modules
                     var cmd = new StringBuilder();
                     if (command.Aliases.Count == 1)
                     {
-                        cmd.Append($"🛆 {command.Aliases[0]}" + Environment.NewLine);
+                        cmd.Append($"─ `{command.Aliases[0]}`" + Environment.NewLine);
                     }
                     else
                     {
-                        cmd.Append($"╔ {command.Aliases[0]}" + Environment.NewLine);
+                        cmd.Append($"┌ `{command.Aliases[0]}`" + Environment.NewLine);
                         var next = command.Aliases.Skip(1).SkipLast(1).ToList();
                         if (next.Count != 0)
-                        {
-                            cmd.Append("╠ ");
-                            cmd.Append(next.Aggregate((current, item) =>
-                                current + Environment.NewLine + "╠ " +
-                                item) + Environment.NewLine);
-                        }
+                            foreach (var alias in next)
+                                cmd.AppendLine($"├ `{alias}`");
 
-                        cmd.Append($"╚ {command.Aliases[^1]}" + Environment.NewLine);
+                        cmd.Append($"└ `{command.Aliases[^1]}`" + Environment.NewLine);
                     }
 
                     var s = cmd.ToString();
