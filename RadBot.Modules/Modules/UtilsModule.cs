@@ -228,11 +228,12 @@ namespace RadBot.Modules
         public class Cleaner : ModuleBase<SocketCommandContext>
         {
             private readonly AppConfiguration _config;
+
             public Cleaner(AppConfiguration config)
             {
                 _config = config;
             }
-            
+
             [Command("self")]
             [Summary("Cleans bot's messages in current channel.")]
             public async Task CleanSelf([Summary("The maximum messages to view for deletion.")] int max)

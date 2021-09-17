@@ -17,8 +17,8 @@ namespace RadBot.Modules
     public class HelpModule : ModuleBase<SocketCommandContext>
     {
         private readonly AppConfiguration _config;
-        private readonly IServiceProvider _services;
         private readonly CommandService _service;
+        private readonly IServiceProvider _services;
 
         public HelpModule(CommandService service, AppConfiguration config, IServiceProvider services)
         {

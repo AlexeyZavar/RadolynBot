@@ -54,7 +54,7 @@ namespace RadBot
         public static void Initialize(AppConfiguration config)
         {
             BotStartedTime = DateTime.Now;
-            
+
             var oldPath = Environment.GetEnvironmentVariable("PATH");
 
             // path to some libs
@@ -66,7 +66,7 @@ namespace RadBot
             ConfigurationScheme.Ensure(config, typeof(Config));
 
             // check essential settings
-            if (string.IsNullOrWhiteSpace(config["token"]) || 
+            if (string.IsNullOrWhiteSpace(config["token"]) ||
                 string.IsNullOrWhiteSpace(config["prefix"]) ||
                 string.IsNullOrWhiteSpace(config["builderColor"]))
             {

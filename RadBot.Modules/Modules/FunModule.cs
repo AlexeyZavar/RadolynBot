@@ -13,14 +13,13 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using RadLibrary;
-using RadLibrary.Configuration;
 using Serilog;
 
 #endregion
 
 namespace RadBot.Modules
 {
-    [RequireOwner]
+    [RequireUserPermission(GuildPermission.Administrator)]
     [Name("Fun")]
     [Group("fun")]
     public class FunModule : ModuleBase<SocketCommandContext>
@@ -29,8 +28,7 @@ namespace RadBot.Modules
         private static readonly List<ulong> InFlight = new List<ulong>();
 
         private static HashSet<ulong> _inLock = new HashSet<ulong>();
-        private static readonly Random Random = new Random();
-        
+
         public FunModule(DiscordSocketClient client)
         {
             client.MessageReceived += ClientOnMessageReceived;
@@ -241,7 +239,7 @@ namespace RadBot.Modules
         {
             var users = (await Context.Channel.GetUsersAsync().FlattenAsync()).ToList();
 
-            var num = Random.Next(users.Count);
+            var num = Utilities.RandomInt(0, users.Count - 1);
 
             await ReplyAsync(users[num].Username);
         }
@@ -308,7 +306,7 @@ namespace RadBot.Modules
                 {
                 }
         }
-        
+
         [Name("Raid")]
         [Group("raid")]
         private class RaidModule : ModuleBase<SocketCommandContext>

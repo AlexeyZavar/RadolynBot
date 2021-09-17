@@ -18,7 +18,6 @@ namespace RadBot
         private readonly AppConfiguration _config;
         private readonly IServiceProvider _services;
 
-        // Retrieve client and CommandService instance via ctor
         public CommandHandler(DiscordSocketClient client, CommandService commands, IServiceProvider services)
         {
             _client = client;
@@ -30,7 +29,6 @@ namespace RadBot
 
         public async Task AddCommands()
         {
-            // Hook the MessageReceived event into our command handler
             _client.MessageReceived += HandleCommandAsync;
             _commands.CommandExecuted += Logging.LogCommandService;
 
