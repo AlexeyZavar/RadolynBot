@@ -69,13 +69,17 @@ namespace RadBot
         private static async Task DownloadSodium()
         {
             // win:   https://download.libsodium.org/libsodium/releases/libsodium-1.0.18-stable-msvc.zip
-            // linux: http://nl.archive.ubuntu.com/ubuntu/pool/main/libs/libsodium/libsodium-dev_1.0.18-1_amd64.deb
+            // linux: -
 
             Log.Information("Downloading libsodium");
 
-            var url = Utilities.IsWindows
-                ? "https://download.libsodium.org/libsodium/releases/libsodium-1.0.18-stable-msvc.zip"
-                : "http://nl.archive.ubuntu.com/ubuntu/pool/main/libs/libsodium/libsodium-dev_1.0.18-1_amd64.deb";
+            if (!Utilities.IsWindows)
+            {
+                Log.Error("libsodium should be installed using package manager");
+                return;
+            }
+
+            var url = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.18-stable-msvc.zip";
             var filepath = Path.Combine(BinariesPath, "sodium.arc");
 
             await DownloadFile(url, filepath);
@@ -83,8 +87,7 @@ namespace RadBot
                 x.Contains("Release") &&
                 x.Contains("dynamic") &&
                 x.EndsWith(".dll") &&
-                !x.Contains("32") ||
-                x.EndsWith("libsodium.a"));
+                !x.Contains("32"));
         }
 
         private static async Task DownloadFfmpeg()
@@ -125,6 +128,7 @@ namespace RadBot
                 if (pred(reader.Entry.Key)) break;
             }
 
+
             reader.WriteEntryToDirectory(BinariesPath, new ExtractionOptions
             {
                 ExtractFullPath = false,
@@ -135,6 +139,8 @@ namespace RadBot
             archive.Dispose();
 
             File.Delete(filepath);
+
+            SetPermissions(Path.Combine(BinariesPath, Path.GetFileName(reader.Entry.Key)));
         }
 
         private static async Task DownloadFile(string url, string filepath)
@@ -155,13 +161,37 @@ namespace RadBot
             await stream.CopyToAsync(f);
 
             Log.Information("{Filename} downloaded", Path.GetFileName(filepath));
+            SetPermissions(filepath);
+        }
+
+        private static void SetPermissions(string filepath)
+        {
+            // make +x for linux
+            if (!Utilities.IsWindows)
+            {
+                Log.Information("Setting chmod for {File}", filepath);
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "chmod",
+                    Arguments = "+x " + filepath,
+                    UseShellExecute = false
+                };
+                Process.Start(psi);
+            }
         }
 
         private static bool IsExecutableExists(string filename)
         {
             try
             {
-                Process.Start(filename)!.Kill(true);
+                var psi = new ProcessStartInfo
+                {
+                    FileName = filename,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                };
+                Process.Start(psi)!.Kill(true);
                 Log.Information("{Filename} exists in system", filename);
                 return true;
             }
@@ -176,6 +206,9 @@ namespace RadBot
         {
             try
             {
+                if (!Utilities.IsWindows)
+                    libname += ".so";
+
                 var ptr = NativeLibrary.Load(libname);
                 NativeLibrary.Free(ptr);
 

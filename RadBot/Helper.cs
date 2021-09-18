@@ -63,6 +63,7 @@ namespace RadBot
 
             // path to some libs
             Environment.SetEnvironmentVariable("PATH", oldPath + Path.PathSeparator + BinaryHelper.BinariesPath);
+            Log.Information("PATH: {Path}", Environment.GetEnvironmentVariable("PATH"));
 
             var executablesTask = BinaryHelper.CheckExecutables();
 
@@ -83,8 +84,6 @@ namespace RadBot
             _config = config;
 
             await executablesTask;
-
-            Log.Information("PATH: {Path}", Environment.GetEnvironmentVariable("PATH"));
         }
 
         private static Color GetEmbedColor()
