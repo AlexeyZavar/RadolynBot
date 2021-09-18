@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -21,7 +20,7 @@ namespace RadBot
 {
     public static class Helper
     {
-        private const string Version = "0.5";
+        private const string Version = "0.6";
 
         private static DateTime _botStartTime;
         private static AppConfiguration _config;
@@ -62,22 +61,10 @@ namespace RadBot
 
             var oldPath = Environment.GetEnvironmentVariable("PATH");
 
-            var current = Path.GetDirectoryName(typeof(Helper).Assembly.Location);
-
             // path to some libs
-            Environment.SetEnvironmentVariable("PATH",
-                oldPath + Path.PathSeparator +
-                Path.Combine(current, "Binaries", "Libs") + Path.PathSeparator +
-                Path.Combine(current, "Binaries", "FFmpeg", Utilities.IsWindows ? "win" : "linux") +
-                Path.PathSeparator +
-                Path.Combine(current, "Binaries", "youtube-dl"));
+            Environment.SetEnvironmentVariable("PATH", oldPath + Path.PathSeparator + BinaryHelper.BinariesPath);
 
-            Task ytdl = null;
-
-            // check if youtube-dl exists
-            var ytdlExists = IsExecutableExists("youtube-dl.exe");
-            if (!ytdlExists)
-                ytdl = DownloadYoutubeDl();
+            var executablesTask = BinaryHelper.CheckExecutables();
 
             // init config
             ConfigurationScheme.Ensure(config, typeof(Config));
@@ -95,40 +82,9 @@ namespace RadBot
             config.HotReload = true;
             _config = config;
 
-            if (ytdl != null)
-                await ytdl;
+            await executablesTask;
 
             Log.Information("PATH: {Path}", Environment.GetEnvironmentVariable("PATH"));
-        }
-
-        private static async Task DownloadYoutubeDl()
-        {
-            var filename = "youtube-dl" + (Utilities.IsWindows ? ".exe" : "");
-            var filepath = Path.Combine("Binaries", "youtube-dl", filename);
-
-            Directory.CreateDirectory(Path.GetDirectoryName(filepath)!);
-
-            await using var stream =
-                await HttpClient.GetStreamAsync("https://github.com/ytdl-org/youtube-dl/releases/latest/download/" +
-                                                filename);
-            await using var f = File.OpenWrite(filepath);
-
-            await stream.CopyToAsync(f);
-        }
-
-        private static bool IsExecutableExists(string filename)
-        {
-            try
-            {
-                Process.Start(filename)!.Kill(true);
-                Log.Information("{Filename} exists in system", filename);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Log.Warning("Error while trying to run {Filename} ({Exception})", filename, e.Message);
-                return false;
-            }
         }
 
         private static Color GetEmbedColor()
@@ -144,8 +100,6 @@ namespace RadBot
                 .WithFooter("Sistine Legacy by Radolyn (v" + Version + " by AlexeyZavar#2198)",
                     "https://radolyn.com/shared/2.jpg")
                 .WithImageUrl(Gifs.RandomItem());
-
-            // todo: random gif
 
             return embedBuilder;
         }

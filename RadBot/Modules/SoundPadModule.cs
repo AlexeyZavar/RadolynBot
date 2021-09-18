@@ -77,15 +77,15 @@ namespace RadBot.Modules
             {
                 try
                 {
-                    await Context.Guild.CurrentUser.ModifyAsync(properties =>
-                        properties.Mute = new Optional<bool>(false));
+                    if (Context.Guild.CurrentUser.IsMuted)
+                        await Context.Guild.CurrentUser.ModifyAsync(properties =>
+                            properties.Mute = new Optional<bool>(false));
                 }
                 catch
                 {
                     // ok
                     break;
                 }
-
 
                 await Task.Delay(750);
             }
@@ -291,7 +291,7 @@ namespace RadBot.Modules
 
             return Process.Start(new ProcessStartInfo
             {
-                FileName = isWin ? Path.Combine("Binaries", "FFmpeg", "win", "ffmpeg.exe") : "ffmpeg",
+                FileName = "ffmpeg",
                 Arguments = args,
                 UseShellExecute = false,
                 RedirectStandardOutput = true

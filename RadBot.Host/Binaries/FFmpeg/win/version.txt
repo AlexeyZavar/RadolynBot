@@ -1,3 +1,0 @@
-4.2.3
-
-https://ffmpeg.zeranoe.com/builds/
