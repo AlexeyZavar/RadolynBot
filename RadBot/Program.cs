@@ -32,7 +32,7 @@ namespace RadBot
 
             _config = AppConfiguration.Initialize<FileManager>("bot");
 
-            Helper.Initialize(_config);
+            await Helper.Initialize(_config);
 
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {

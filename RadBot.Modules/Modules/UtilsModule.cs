@@ -2,16 +2,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.Rest;
 using Discord.WebSocket;
-using NYoutubeDL;
 using RadLibrary.Configuration;
-using Serilog;
 
 #endregion
 
@@ -22,37 +22,49 @@ namespace RadBot.Modules
     [Group("utils")]
     public sealed class UtilsModule : ModuleBase<SocketCommandContext>
     {
-        private readonly AppConfiguration _config;
-
-        public UtilsModule(AppConfiguration config)
-        {
-            _config = config;
-        }
-
         [Command("dl", RunMode = RunMode.Async)]
-        [Summary("Bridge to youtube-dl module.")]
+        [Summary("Sends a video\\audio download URL.")]
         public async Task YoutubeDownload([Remainder] [Summary("The url.")] string url)
         {
-            var youtubeDl = new YoutubeDL
+            // todo: possible arguments escaping
+            try
             {
-                YoutubeDlPath = _config["youtube-dl"]
-            };
-
-            youtubeDl.Options.VerbositySimulationOptions.GetUrl = true;
-            var downloadUrl = "";
-
-            await youtubeDl.GetDownloadInfoAsync(url);
-
-            youtubeDl.StandardOutputEvent += (sender, s) =>
+                var res = await Helper.HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                res.EnsureSuccessStatusCode();
+            }
+            catch
             {
-                downloadUrl += s + Environment.NewLine;
-                Log.Verbose(s);
+                await ReplyAsync("Invalid URL!");
+                return;
+            }
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = "youtube-dl",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                Arguments = $"{url} -g"
             };
+            var proc = Process.Start(psi);
+            await proc.WaitForExitAsync();
 
-            await youtubeDl.PrepareDownloadAsync();
-            await youtubeDl.DownloadAsync();
+            var data = await proc.StandardOutput.ReadToEndAsync();
+            var urls = data.Split(Environment.NewLine);
 
-            await ReplyAsync(Context.User.Mention + " " + downloadUrl);
+            var youtubeDlSb = new StringBuilder();
+            foreach (var dlUrl in urls)
+            {
+                if (dlUrl.Contains("mime=video"))
+                    youtubeDlSb.Append("**Video URL**: ");
+                else
+                    youtubeDlSb.Append("**Audio URL**: ");
+
+                var shorten = await Helper.ShortenUrl(dlUrl);
+                youtubeDlSb.AppendLine(shorten);
+                youtubeDlSb.AppendLine();
+            }
+
+            await ReplyAsync(Context.User.Mention + Environment.NewLine + youtubeDlSb);
         }
 
         [Name("Audit")]

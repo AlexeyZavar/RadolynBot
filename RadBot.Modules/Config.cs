@@ -25,8 +25,5 @@ namespace RadBot
 
         [SchemeParameter(Comment = "The bot token")]
         public string Token;
-
-        [SchemeParameter("youtube-dl", Comment = "The bot token")]
-        public string YoutubeDl;
     }
 }

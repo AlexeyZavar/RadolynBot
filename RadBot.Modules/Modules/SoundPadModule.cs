@@ -117,7 +117,7 @@ namespace RadBot.Modules
         [Summary("Downloads specified sound from https://meowpad.me.")]
         public async Task Fetch([Remainder] [Summary("The sound to download.")] string sound)
         {
-            var sounds = MeowpadParser.FetchSound(sound, 1);
+            var sounds = await MeowpadParser.FetchSound(sound, 1);
 
             if (sounds.Meta.TotalResults == 0)
             {
@@ -129,7 +129,7 @@ namespace RadBot.Modules
             {
                 var msg = await ReplyAsync("Downloading...");
 
-                var res = MeowpadParser.DownloadSound(sounds.Sounds[0].Slug, _config["soundPadPath"]);
+                var res = await MeowpadParser.DownloadSound(sounds.Sounds[0].Slug, _config["soundPadPath"]);
 
                 await msg.ModifyAsync(properties => properties.Content = res ? "Downloaded!" : "Failed to download!");
 
@@ -151,7 +151,7 @@ namespace RadBot.Modules
         [Summary("Downloads specified sound from https://meowpad.me.")]
         public async Task Fetch([Remainder] [Summary("The id of sound to download.")] int id)
         {
-            var sounds = MeowpadParser.FetchSoundById(id);
+            var sounds = await MeowpadParser.FetchSoundById(id);
 
             if (sounds.Id == 0)
             {
@@ -161,7 +161,7 @@ namespace RadBot.Modules
 
             var msg = await ReplyAsync("Downloading...");
 
-            var res = MeowpadParser.DownloadSound(sounds.Slug, _config["soundPadPath"]);
+            var res = await MeowpadParser.DownloadSound(sounds.Slug, _config["soundPadPath"]);
 
             await msg.ModifyAsync(properties => properties.Content = res ? "Downloaded!" : "Failed to download!");
         }
