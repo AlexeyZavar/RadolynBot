@@ -13,7 +13,7 @@ namespace RadBot.Modules
 {
     [RequireUserPermission(GuildPermission.Administrator)]
     [Name("Admin")]
-    public class AdminModule : ModuleBase<SocketCommandContext>
+    public sealed class AdminModule : ModuleBase<SocketCommandContext>
     {
         protected override void AfterExecute(CommandInfo command)
         {

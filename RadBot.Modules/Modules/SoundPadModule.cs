@@ -22,7 +22,7 @@ namespace RadBot.Modules
 {
     [Name("SoundPad")]
     [Group("sp")]
-    public class SoundPadModule : ModuleBase<SocketCommandContext>
+    public sealed class SoundPadModule : ModuleBase<SocketCommandContext>
     {
         private static readonly Dictionary<ulong, CancellationTokenSource> Tokens =
             new();

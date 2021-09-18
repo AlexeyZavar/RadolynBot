@@ -25,22 +25,27 @@ namespace RadBot
 
         private static readonly HashSet<ulong> IgnoredUsers = new() { 305414308320247818 };
 
-        public static double UpTime => (DateTime.Now - _botStartTime).TotalMilliseconds;
+        private static readonly List<string> Gifs = new List<string>
+        {
+            "https://c.tenor.com/VrfSZUjiWn4AAAAC/shy-anime.gif",
+            "https://c.tenor.com/NnNnxJlJhc8AAAAC/shy-anime.gif",
+            "https://c.tenor.com/BBuE8xkVCHgAAAAC/anime-blush.gif",
+            "https://c.tenor.com/uT9BWeRBJwYAAAAC/blushing-anime-girl.gif",
+            "https://c.tenor.com/6xnCJNAGXN8AAAAC/blushes-anime-girl-blush.gif",
+            "https://c.tenor.com/hXGbCYQfO6oAAAAC/anime-blush.gif"
+        };
 
-        public static void CheckIgnoreThrow(IUser user)
+        public static double UpTime => (DateTime.Now - _botStartTime).TotalSeconds;
+
+        public static void IsUserIgnoredThrow(IUser user)
         {
             if (IgnoredUsers.Contains(user.Id))
-                throw new Exception();
+                throw new Exception($"{user.Username} is in ignore list");
         }
 
-        /// <summary>
-        ///     Returns false if in ignore list
-        /// </summary>
-        /// <param name="user"></param>
-        /// <returns></returns>
-        public static bool CheckIgnoreBool(IUser user)
+        public static bool IsUserIgnored(IUser user)
         {
-            return !IgnoredUsers.Contains(user.Id);
+            return IgnoredUsers.Contains(user.Id);
         }
 
         public static void Initialize(AppConfiguration config)
@@ -79,11 +84,11 @@ namespace RadBot
 
         public static EmbedBuilder GetBuilder()
         {
-            var embedBuilder = new EmbedBuilder();
-
-            embedBuilder.WithColor(GetEmbedColor());
-            embedBuilder.WithFooter("Sistine Legacy by Radolyn (v" + Version + " by AlexeyZavar#2198)",
-                "https://radolyn.com/shared/2.jpg");
+            var embedBuilder = new EmbedBuilder()
+                .WithColor(GetEmbedColor())
+                .WithFooter("Sistine Legacy by Radolyn (v" + Version + " by AlexeyZavar#2198)",
+                    "https://radolyn.com/shared/2.jpg")
+                .WithImageUrl(Gifs.RandomItem());
 
             // todo: random gif
 

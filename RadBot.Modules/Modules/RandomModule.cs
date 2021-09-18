@@ -8,7 +8,7 @@ using Discord.Commands;
 namespace RadBot.Modules
 {
     [Name("Random")]
-    public class RandomModule : ModuleBase<SocketCommandContext>
+    public sealed class RandomModule : ModuleBase<SocketCommandContext>
     {
         [Command("social")]
         [Summary("Prints developer's social links.")]

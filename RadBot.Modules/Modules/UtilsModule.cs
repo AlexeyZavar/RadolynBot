@@ -20,7 +20,7 @@ namespace RadBot.Modules
     [RequireUserPermission(GuildPermission.Administrator)]
     [Name("Utilities")]
     [Group("utils")]
-    public class UtilsModule : ModuleBase<SocketCommandContext>
+    public sealed class UtilsModule : ModuleBase<SocketCommandContext>
     {
         private readonly AppConfiguration _config;
 

@@ -22,21 +22,28 @@ namespace RadBot.Modules
     [RequireUserPermission(GuildPermission.Administrator)]
     [Name("Fun")]
     [Group("fun")]
-    public class FunModule : ModuleBase<SocketCommandContext>
+    public sealed class FunModule : ModuleBase<SocketCommandContext>, IDisposable
     {
         private static int _flightNumber;
         private static readonly List<ulong> InFlight = new();
-
-        private static HashSet<ulong> _inLock = new();
+        private static readonly HashSet<ulong> InLock = new();
+        private readonly DiscordSocketClient _client;
 
         public FunModule(DiscordSocketClient client)
         {
+            _client = client;
             client.MessageReceived += ClientOnMessageReceived;
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _client.MessageReceived -= ClientOnMessageReceived;
         }
 
         private static async Task ClientOnMessageReceived(SocketMessage msg)
         {
-            if (_inLock.Contains(msg.Author.Id))
+            if (InLock.Contains(msg.Author.Id))
                 await msg.Channel.DeleteMessageAsync(msg);
         }
 
@@ -45,7 +52,8 @@ namespace RadBot.Modules
         [Summary("Teleports user around all voice channels.")]
         public async Task Travel([Remainder] [Summary("The user to tp")] IUser user)
         {
-            Helper.CheckIgnoreThrow(user);
+            Helper.IsUserIgnoredThrow(user);
+
             var channels = Context.Guild.VoiceChannels;
 
             var victim = Context.Guild.GetUser(user.Id);
@@ -112,27 +120,26 @@ namespace RadBot.Modules
         public async Task Lock([Summary("The user to lock.")] IUser user,
             [Summary("The time to lock for.")] TimeSpan time = default)
         {
-            if (!Helper.CheckIgnoreBool(user))
-                return;
+            Helper.IsUserIgnoredThrow(user);
 
             if (time == default)
                 time = new TimeSpan(TimeSpan.TicksPerDay);
 
             var victim = Context.Guild.GetUser(user.Id);
 
-            if (_inLock.Contains(victim.Id))
+            if (InLock.Contains(victim.Id))
             {
                 await ReplyAsync(user.Mention + " is already in lock.");
                 return;
             }
 
-            _inLock.Add(user.Id);
+            InLock.Add(user.Id);
 
             await ReplyAsync(user.Mention + ", you're locked for " + time.TotalSeconds + " seconds.");
 
             var stopwatch = Stopwatch.StartNew();
 
-            while (stopwatch.ElapsedMilliseconds < time.TotalMilliseconds && _inLock.Contains(user.Id))
+            while (stopwatch.ElapsedMilliseconds < time.TotalMilliseconds && InLock.Contains(user.Id))
             {
                 victim = Context.Guild.GetUser(user.Id);
 
@@ -147,7 +154,7 @@ namespace RadBot.Modules
                 await Task.Delay(750);
             }
 
-            _inLock.Remove(user.Id);
+            InLock.Remove(user.Id);
 
             await ReplyAsync(user.Mention + ", you can join now.");
 
@@ -187,7 +194,7 @@ namespace RadBot.Modules
         [Summary("Allows user to join voice channels again.")]
         public async Task Unlock([Summary("The user to unlock.")] IUser user = default)
         {
-            if (_inLock.Contains(Context.User.Id))
+            if (InLock.Contains(Context.User.Id))
             {
                 await ReplyAsync(Context.User.Mention + ", you cannot unlock anyone while you're in lock.");
                 return;
@@ -195,17 +202,17 @@ namespace RadBot.Modules
 
             if (user == default)
             {
-                _inLock = new HashSet<ulong>();
+                InLock.Clear();
                 return;
             }
 
-            if (!_inLock.Contains(user.Id))
+            if (!InLock.Contains(user.Id))
             {
                 await ReplyAsync(user.Mention + " is not locked.");
                 return;
             }
 
-            _inLock.Remove(user.Id);
+            InLock.Remove(user.Id);
         }
 
         [Command("spam", RunMode = RunMode.Async)]
@@ -244,9 +251,9 @@ namespace RadBot.Modules
             await ReplyAsync(users[num].Username);
         }
 
-        [Command("fuck")]
-        [Summary("Spam to PM.")]
-        public async Task Fuck(IUser user, [Remainder] string message)
+        [Command("pm")]
+        [Summary("Send message to PM.")]
+        public async Task SendPrivateMessage(IUser user, [Remainder] string message)
         {
             var channel = await user.GetOrCreateDMChannelAsync();
 
@@ -331,7 +338,7 @@ namespace RadBot.Modules
 
             [Command("verify", RunMode = RunMode.Async)]
             [Alias("ensure")]
-            [Summary("Verifies that we can raid this channel.")]
+            [Summary("Verifies that we can raid this guild.")]
             public async Task Verify()
             {
                 var bot = Context.Guild.GetUser(Context.Client.CurrentUser.Id);
@@ -340,6 +347,7 @@ namespace RadBot.Modules
 
                 // does our bot has permissions to create channels
                 if (!bot.GuildPermissions.ManageChannels) text = ", I have no permissions to manage channels.";
+                if (!bot.GuildPermissions.ManageNicknames) text = ", I have no permissions to manage nicknames.";
 
                 var msg = await ReplyAsync(Context.User.Mention + text);
                 await Task.Delay(1500);

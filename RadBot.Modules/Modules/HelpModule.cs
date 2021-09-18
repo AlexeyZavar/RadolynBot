@@ -14,7 +14,7 @@ using RadLibrary.Configuration;
 namespace RadBot.Modules
 {
     [Name("Random")]
-    public class HelpModule : ModuleBase<SocketCommandContext>
+    public sealed class HelpModule : ModuleBase<SocketCommandContext>
     {
         private readonly CommandService _commandService;
         private readonly AppConfiguration _config;
