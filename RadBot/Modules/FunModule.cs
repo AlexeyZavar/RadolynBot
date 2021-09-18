@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Commands.Builders;
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using RadLibrary;
@@ -32,13 +33,16 @@ namespace RadBot.Modules
         public FunModule(DiscordSocketClient client)
         {
             _client = client;
-            client.MessageReceived += ClientOnMessageReceived;
         }
 
-        /// <inheritdoc />
         public void Dispose()
         {
             _client.MessageReceived -= ClientOnMessageReceived;
+        }
+
+        protected override void OnModuleBuilding(CommandService commandService, ModuleBuilder builder)
+        {
+            _client.MessageReceived += ClientOnMessageReceived;
         }
 
         private static async Task ClientOnMessageReceived(SocketMessage msg)
