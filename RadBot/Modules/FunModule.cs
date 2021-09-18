@@ -23,7 +23,7 @@ namespace RadBot.Modules
     [RequireUserPermission(GuildPermission.Administrator)]
     [Name("Fun")]
     [Group("fun")]
-    public sealed class FunModule : ModuleBase<SocketCommandContext>, IDisposable
+    public sealed class FunModule : ModuleBase<SocketCommandContext>
     {
         private static int _flightNumber;
         private static readonly List<ulong> InFlight = new();
@@ -33,11 +33,6 @@ namespace RadBot.Modules
         public FunModule(DiscordSocketClient client)
         {
             _client = client;
-        }
-
-        public void Dispose()
-        {
-            _client.MessageReceived -= ClientOnMessageReceived;
         }
 
         protected override void OnModuleBuilding(CommandService commandService, ModuleBuilder builder)
