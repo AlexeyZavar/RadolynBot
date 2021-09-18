@@ -41,11 +41,11 @@ namespace RadBot.Modules
             var psi = new ProcessStartInfo
             {
                 FileName = "youtube-dl",
-                RedirectStandardOutput = true,
+                Arguments = $"{url} -g",
                 UseShellExecute = false,
-                Arguments = $"{url} -g"
+                RedirectStandardOutput = true
             };
-            var proc = Process.Start(psi);
+            var proc = Process.Start(psi) ?? throw new Exception("Failed to run youtube-dl");
             await proc.WaitForExitAsync();
 
             var data = await proc.StandardOutput.ReadToEndAsync();

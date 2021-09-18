@@ -294,7 +294,7 @@ namespace RadBot.Modules
                 FileName = isWin ? Path.Combine("Binaries", "FFmpeg", "win", "ffmpeg.exe") : "ffmpeg",
                 Arguments = args,
                 UseShellExecute = false,
-                RedirectStandardOutput = true,
+                RedirectStandardOutput = true
             });
         }
     }

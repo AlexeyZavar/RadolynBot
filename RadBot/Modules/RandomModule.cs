@@ -7,7 +7,7 @@ using Discord.Commands;
 
 namespace RadBot.Modules
 {
-    [Name("Random")]
+    [Name("Various")]
     public sealed class RandomModule : ModuleBase<SocketCommandContext>
     {
         [Command("social")]

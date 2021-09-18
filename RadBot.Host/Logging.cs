@@ -9,7 +9,7 @@ using Serilog.Events;
 
 #endregion
 
-namespace RadBot
+namespace RadBot.Host
 {
     public static class Logging
     {

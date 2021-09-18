@@ -246,9 +246,7 @@ namespace RadBot.Modules
         {
             var users = (await Context.Channel.GetUsersAsync().FlattenAsync()).ToList();
 
-            var num = Utilities.RandomInt(0, users.Count - 1);
-
-            await ReplyAsync(users[num].Username);
+            await ReplyAsync(users.RandomItem().Username);
         }
 
         [Command("pm")]

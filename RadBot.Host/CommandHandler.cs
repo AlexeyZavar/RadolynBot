@@ -9,7 +9,7 @@ using RadLibrary.Configuration;
 
 #endregion
 
-namespace RadBot
+namespace RadBot.Host
 {
     public sealed class CommandHandler
     {

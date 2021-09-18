@@ -1,8 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadBot", "RadBot\RadBot.csproj", "{BFFB99CF-4A31-46F3-8E64-EBE15F3C86FE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadBot.Host", "RadBot.Host\RadBot.Host.csproj", "{BFFB99CF-4A31-46F3-8E64-EBE15F3C86FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadBot.Modules", "RadBot.Modules\RadBot.Modules.csproj", "{B93475E8-9EA5-42D2-BCE8-356DE4BED6E5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RadBot", "RadBot\RadBot.csproj", "{B93475E8-9EA5-42D2-BCE8-356DE4BED6E5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

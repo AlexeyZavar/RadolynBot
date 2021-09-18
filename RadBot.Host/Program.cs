@@ -12,7 +12,7 @@ using Serilog;
 
 #endregion
 
-namespace RadBot
+namespace RadBot.Host
 {
     internal static class Program
     {

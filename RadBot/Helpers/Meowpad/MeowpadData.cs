@@ -1,4 +1,4 @@
-﻿//    using RadBot.Modules.Helpers.Meowpad;
+﻿//    using RadBot.Helpers.Meowpad;
 //
 //    var meowpadData = MeowpadData.FromJson(jsonString);
 

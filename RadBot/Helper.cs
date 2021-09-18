@@ -48,11 +48,6 @@ namespace RadBot
                 throw new Exception($"{user.Username} is in ignore list");
         }
 
-        public static bool IsUserIgnored(IUser user)
-        {
-            return IgnoredUsers.Contains(user.Id);
-        }
-
         public static async Task<string> ShortenUrl(string url)
         {
             var res = await HttpClient.PostAsJsonAsync("https://gotiny.cc/api", new { input = url });
