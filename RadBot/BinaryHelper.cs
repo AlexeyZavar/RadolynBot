@@ -63,25 +63,7 @@ namespace RadBot
             var filepath = Path.Combine(BinariesPath, "opus.arc");
 
             await DownloadFile(url, filepath);
-            var archive = ArchiveFactory.Open(filepath);
-
-            var reader = archive.ExtractAllEntries();
-            while (reader.MoveToNextEntry())
-            {
-                if (reader.Entry.IsDirectory) continue;
-                if (reader.Entry.Key.EndsWith("libopus.dll")) break;
-            }
-
-            reader.WriteEntryToDirectory(BinariesPath, new ExtractionOptions
-            {
-                ExtractFullPath = false,
-                Overwrite = true
-            });
-
-            reader.Dispose();
-            archive.Dispose();
-
-            File.Delete(filepath);
+            Extract(filepath, x => x.EndsWith("libopus.dll"));
         }
 
         private static async Task DownloadSodium()
@@ -97,29 +79,12 @@ namespace RadBot
             var filepath = Path.Combine(BinariesPath, "sodium.arc");
 
             await DownloadFile(url, filepath);
-            var archive = ArchiveFactory.Open(filepath);
-
-            var reader = archive.ExtractAllEntries();
-            while (reader.MoveToNextEntry())
-            {
-                if (reader.Entry.IsDirectory) continue;
-                if (reader.Entry.Key.Contains("Release") &&
-                    reader.Entry.Key.Contains("dynamic") &&
-                    reader.Entry.Key.EndsWith(".dll") &&
-                    !reader.Entry.Key.Contains("32")) break;
-                if (reader.Entry.Key.EndsWith("libsodium.a")) break;
-            }
-
-            reader.WriteEntryToDirectory(BinariesPath, new ExtractionOptions
-            {
-                ExtractFullPath = false,
-                Overwrite = true
-            });
-
-            reader.Dispose();
-            archive.Dispose();
-
-            File.Delete(filepath);
+            Extract(filepath, x =>
+                x.Contains("Release") &&
+                x.Contains("dynamic") &&
+                x.EndsWith(".dll") &&
+                !x.Contains("32") ||
+                x.EndsWith("libsodium.a"));
         }
 
         private static async Task DownloadFfmpeg()
@@ -135,13 +100,29 @@ namespace RadBot
             var filepath = Path.Combine(BinariesPath, "ffmpeg.arc");
 
             await DownloadFile(url, filepath);
+            Extract(filepath, x => x.EndsWith("ffmpeg") || x.EndsWith("ffmpeg.exe"));
+        }
+
+        private static async Task DownloadYoutubeDl()
+        {
+            Log.Information("Downloading youtube-dl");
+
+            var filename = "youtube-dl" + (Utilities.IsWindows ? ".exe" : "");
+            var filepath = Path.Combine(BinariesPath, filename);
+
+            await DownloadFile("https://github.com/ytdl-org/youtube-dl/releases/latest/download/" +
+                               filename, filepath);
+        }
+
+        private static void Extract(string filepath, Predicate<string> pred)
+        {
             var archive = ArchiveFactory.Open(filepath);
 
             var reader = archive.ExtractAllEntries();
             while (reader.MoveToNextEntry())
             {
                 if (reader.Entry.IsDirectory) continue;
-                if (reader.Entry.Key.EndsWith("ffmpeg") || reader.Entry.Key.EndsWith("ffmpeg.exe")) break;
+                if (pred(reader.Entry.Key)) break;
             }
 
             reader.WriteEntryToDirectory(BinariesPath, new ExtractionOptions
@@ -154,17 +135,6 @@ namespace RadBot
             archive.Dispose();
 
             File.Delete(filepath);
-        }
-
-        private static async Task DownloadYoutubeDl()
-        {
-            Log.Information("Downloading youtube-dl");
-
-            var filename = "youtube-dl" + (Utilities.IsWindows ? ".exe" : "");
-            var filepath = Path.Combine(BinariesPath, filename);
-
-            await DownloadFile("https://github.com/ytdl-org/youtube-dl/releases/latest/download/" +
-                               filename, filepath);
         }
 
         private static async Task DownloadFile(string url, string filepath)
